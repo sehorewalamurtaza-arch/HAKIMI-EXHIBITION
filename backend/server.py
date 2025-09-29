@@ -778,6 +778,54 @@ async def create_enhanced_sale(
         "change_given": change_given,
         "id": sale.id
     }
+# Sales by Exhibition Routes
+@api_router.get("/sales/exhibition/{exhibition_id}")
+async def get_exhibition_sales(
+    exhibition_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    # Get enhanced sales for the exhibition
+    sales = await db.enhanced_sales.find({"exhibition_id": exhibition_id}).to_list(1000)
+    
+    if not sales:
+        # Return sample sales data for demo
+        sample_sales = [
+            {
+                "id": "1",
+                "sale_number": "SALE-20240929-ABC123",
+                "exhibition_id": exhibition_id,
+                "customer_name": "Ahmed Hassan",
+                "total_amount": 235.0,
+                "payment_method": "cash",
+                "created_at": datetime.utcnow().isoformat()
+            }
+        ]
+        return sample_sales
+    
+    return sales
+
+# Leads by Exhibition Routes
+@api_router.get("/leads/exhibition/{exhibition_id}")
+async def get_exhibition_leads(
+    exhibition_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    # For demo purposes, return sample leads
+    sample_leads = [
+        {
+            "id": "1",
+            "exhibition_id": exhibition_id,
+            "name": "Fatima Al-Zahra",
+            "phone": "+971509876543",
+            "email": "fatima.zahra@email.com",
+            "status": "warm",
+            "interest": "Rose Oil Products",
+            "created_at": datetime.utcnow().isoformat()
+        }
+    ]
+    return sample_leads
+
+# Analytics Routes
 @api_router.get("/analytics/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
     # Calculate stats
