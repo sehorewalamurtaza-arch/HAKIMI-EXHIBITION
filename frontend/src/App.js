@@ -150,7 +150,25 @@ const Header = () => {
           </nav>
 
           {/* User Info */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
+            {/* Currency Selector */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-semibold text-gray-600">Currency:</label>
+              <select
+                value={localStorage.getItem('currency') || 'AED'}
+                onChange={(e) => {
+                  localStorage.setItem('currency', e.target.value);
+                  window.location.reload();
+                }}
+                className="text-sm border border-gray-300 rounded-lg px-2 py-1 bg-white"
+                data-testid="currency-selector"
+              >
+                <option value="AED">AED (د.إ)</option>
+                <option value="QAR">QAR (ر.ق)</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center space-x-4">
             <div className="text-right">
               <div className="text-sm font-medium text-gray-900">{user?.full_name}</div>
               <div className="text-xs text-gray-500 capitalize">{user?.role}</div>
