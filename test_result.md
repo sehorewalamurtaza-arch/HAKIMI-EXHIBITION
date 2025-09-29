@@ -142,28 +142,34 @@
         comment: "Exhibition APIs implemented, original POS logic requires exhibition-based inventory system"
 
   - task: "Inventory Management System per Exhibition"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "MISSING: Original POS uses /inventory/exhibition/{id} API - current implementation uses direct products"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /inventory/exhibition/{id} API is implemented and working. Returns sample inventory with remaining_quantity > 0. Found 3 inventory items for exhibition 1 with proper product details and stock levels."
 
   - task: "Multi-Payment Sales API"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "MISSING: Original supports multiple payment methods per sale, current only supports single payment"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: POST /sales/enhanced API is implemented and working. Successfully tested multi-payment functionality with cash+card payments. Properly calculates totals, tax, and change. Returns sale_number and sale_id."
 
 ## frontend:
   - task: "Dashboard with Exhibition Analytics"
