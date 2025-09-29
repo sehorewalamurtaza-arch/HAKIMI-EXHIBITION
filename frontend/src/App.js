@@ -122,8 +122,12 @@ const Header = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-              <Store className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img
+                src="https://customer-assets.emergentagent.com/job_exhib-sales-system/artifacts/wrbx7jzs_Asset%202.png"
+                alt="Hakimi Logo"
+                className="w-8 h-8 object-contain"
+              />
             </div>
             <span className="text-xl font-light text-gray-900">Badshah Hakimi</span>
           </Link>
