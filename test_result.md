@@ -140,6 +140,9 @@
       - working: true
         agent: "main"
         comment: "Exhibition APIs implemented, original POS logic requires exhibition-based inventory system"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /exhibitions API working. Returns active exhibitions with proper data structure. Fixed validation error for database exhibitions. Found 1 active exhibition."
 
   - task: "Inventory Management System per Exhibition"
     implemented: true
