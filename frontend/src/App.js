@@ -201,11 +201,15 @@ const LoginPage = () => {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-black rounded-full mx-auto mb-6 flex items-center justify-center">
-            <Store className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+            <img
+              src="https://customer-assets.emergentagent.com/job_exhib-sales-system/artifacts/wrbx7jzs_Asset%202.png"
+              alt="Hakimi Logo"
+              className="w-16 h-16 object-contain"
+            />
           </div>
           <h1 className="text-4xl font-light text-gray-900 mb-2">Badshah Hakimi</h1>
-          <p className="text-gray-600 font-light">POS & Inventory System</p>
+          <p className="text-gray-600 font-light">Exhibition Sales Platform</p>
         </div>
 
         {/* Form */}
