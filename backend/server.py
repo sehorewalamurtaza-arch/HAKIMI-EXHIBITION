@@ -228,6 +228,13 @@ class Exhibition(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+class ExhibitionCreate(BaseModel):
+    name: str
+    location: str
+    start_date: datetime
+    end_date: datetime
+    description: Optional[str] = None
+
 class ExhibitionResponse(BaseModel):
     id: str
     name: str
