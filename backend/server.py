@@ -195,6 +195,102 @@ class SaleResponse(BaseModel):
     status: OrderStatus
     created_at: datetime
 
+# Category Models
+class Category(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    is_active: bool = True
+
+class CategoryResponse(BaseModel):
+    id: str
+    name: str
+    description: Optional[str]
+    is_active: bool
+
+# Exhibition Models  
+class ExhibitionStatus(str, Enum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class Exhibition(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    location: str
+    start_date: datetime
+    end_date: datetime
+    status: ExhibitionStatus = ExhibitionStatus.DRAFT
+    description: Optional[str] = None
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ExhibitionResponse(BaseModel):
+    id: str
+    name: str
+    location: str
+    start_date: datetime
+    end_date: datetime
+    status: ExhibitionStatus
+    description: Optional[str]
+
+# Inventory Models
+class InventoryItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    exhibition_id: str
+    product_id: str
+    product_name: str
+    product_price: float
+    allocated_quantity: int
+    sold_quantity: int = 0
+    remaining_quantity: int
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class InventoryResponse(BaseModel):
+    id: str
+    exhibition_id: str
+    product_id: str
+    product_name: str
+    product_price: float
+    allocated_quantity: int
+    sold_quantity: int
+    remaining_quantity: int
+
+# Enhanced Sale Models with Multi-Payment Support
+class PaymentDetail(BaseModel):
+    type: str  # "cash", "card", "bank_transfer", "digital_wallet"
+    amount: float
+
+class EnhancedSaleCreate(BaseModel):
+    exhibition_id: str
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    items: List[Dict[str, Any]]  # [{"product_id": "", "quantity": 1, "price": 0.0}]
+    payments: List[PaymentDetail]
+
+class EnhancedSale(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    exhibition_id: str
+    sale_number: str
+    cashier_id: str
+    cashier_name: str
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    items: List[SaleItem]
+    subtotal: float
+    tax_amount: float = 0.0
+    discount_amount: float = 0.0
+    total_amount: float
+    payments: List[PaymentDetail]
+    change_given: float = 0.0
+    status: OrderStatus = OrderStatus.COMPLETED
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Analytics Models
 class DashboardStats(BaseModel):
     total_sales: float
@@ -205,6 +301,9 @@ class DashboardStats(BaseModel):
     recent_sales: List[Dict[str, Any]]
     top_selling_products: List[Dict[str, Any]]
     sales_chart_data: List[Dict[str, Any]]
+    # Exhibition specific stats
+    total_exhibitions: int = 0
+    active_exhibitions: int = 0
 
 # Utility Functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
