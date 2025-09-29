@@ -5,17 +5,12 @@ import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './components/ui/card';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Badge } from './components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './components/ui/dialog';
-import { Textarea } from './components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Alert, AlertDescription } from './components/ui/alert';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table';
-import { Separator } from './components/ui/separator';
 import { toast, Toaster } from './components/ui/sonner';
-import { ShoppingCart, Plus, Search, User, LogOut, BarChart3, Package, Users, Store, Eye, Edit, Trash2, Star } from 'lucide-react';
+import { ShoppingCart, User, LogOut, BarChart3, Package, Users, Store } from 'lucide-react';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -94,7 +89,11 @@ const useAuth = () => useContext(AuthContext);
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-gray-400 text-lg font-light">Loading...</div>
+    </div>
+  );
   if (!user) return <Navigate to="/auth" />;
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     return <Navigate to="/dashboard" />;
@@ -103,7 +102,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   return children;
 };
 
-// Header Component
+// Simple Header Component
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -130,50 +129,53 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Store className="w-5 h-5 text-white" />
+    <header className="bg-white border-b border-gray-100">
+      <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+              <Store className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-xl text-gray-900">Badshah-Hakimi</span>
+            <span className="text-xl font-light text-gray-900">Badshah Hakimi</span>
           </Link>
 
-          <nav className="hidden md:flex space-x-6">
-            <Link to="/" className="text-gray-600 hover:text-gray-900">Home</Link>
-            <Link to="/exhibitions" className="text-gray-600 hover:text-gray-900">Exhibitions</Link>
-            <Link to="/products" className="text-gray-600 hover:text-gray-900">Products</Link>
-            <Link to="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
+          {/* User Info */}
+          <div className="flex items-center space-x-6">
             {user?.role === 'customer' && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => navigate('/cart')}
-                className="relative"
+                className="relative text-gray-600 hover:text-gray-900"
                 data-testid="cart-button"
               >
-                <ShoppingCart className="w-4 h-4" />
+                <ShoppingCart className="w-5 h-5" />
                 {cart.items?.length > 0 && (
-                  <Badge className="absolute -top-2 -right-2 px-1 py-0.5 text-xs">
+                  <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {cart.items.length}
-                  </Badge>
+                  </span>
                 )}
               </Button>
             )}
-            <div className="flex items-center space-x-2">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src="" />
-                <AvatarFallback>{user?.full_name?.charAt(0)?.toUpperCase()}</AvatarFallback>
+            
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-900">{user?.full_name}</div>
+                <div className="text-xs text-gray-500 capitalize">{user?.role}</div>
+              </div>
+              <Avatar className="w-9 h-9">
+                <AvatarFallback className="bg-gray-100 text-gray-600 font-medium">
+                  {user?.full_name?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">{user?.full_name}</span>
-              <Badge variant={user?.role === 'admin' ? 'default' : user?.role === 'vendor' ? 'secondary' : 'outline'}>
-                {user?.role}
-              </Badge>
-              <Button variant="ghost" size="sm" onClick={handleLogout} data-testid="logout-button">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-gray-400 hover:text-gray-600"
+                data-testid="logout-button"
+              >
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
@@ -195,71 +197,91 @@ const LandingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative py-20 px-4">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-10"
-          style={{
-            backgroundImage: 'url(https://images.unsplash.com/photo-1693763824819-965758f8f5c7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBleGhpYml0aW9ufGVufDB8fHx8MTc1OTE2OTkwNXww&ixlib=rb-4.1.0&q=85)'
-          }}
-        />
-        <div className="relative max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Badshah-Hakimi
-            </span>
-            <br />
-            <span className="text-4xl md:text-5xl">Exhibition Sales Platform</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            The premier destination for professional exhibition sales. Connect vendors, customers, 
-            and exhibition organizers in one powerful platform.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/auth')} data-testid="get-started-btn">
-              Get Started
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/products')}>
-              Browse Products
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Choose Our Platform?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <Store className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Professional Exhibitions</h3>
-              <p className="text-gray-600">Manage multiple exhibitions with advanced booth allocation, visitor tracking, and real-time analytics.</p>
-            </Card>
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <Package className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Smart Inventory</h3>
-              <p className="text-gray-600">Real-time inventory management with low-stock alerts and predictive analytics for optimal stock levels.</p>
-            </Card>
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <BarChart3 className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Advanced Analytics</h3>
-              <p className="text-gray-600">Comprehensive sales reports, customer insights, and exhibition performance metrics in real-time.</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <section className="px-6 py-24">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Transform Your Exhibition Business?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of successful vendors and exhibition organizers using our platform.
+          {/* Logo */}
+          <div className="mb-12">
+            <div className="w-16 h-16 bg-black rounded-full mx-auto mb-6 flex items-center justify-center">
+              <Store className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          
+          <h1 className="text-6xl md:text-7xl font-light text-gray-900 mb-8 tracking-tight">
+            Badshah
+            <br />
+            <span className="text-4xl md:text-5xl text-gray-500">Hakimi</span>
+          </h1>
+          
+          <p className="text-xl font-light text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+            A refined platform for exhibition sales.
+            <br />Simple, elegant, effective.
           </p>
-          <Button size="lg" variant="secondary" onClick={() => navigate('/auth')} data-testid="join-now-btn">
-            Join Now - It's Free
+          
+          <div className="space-y-4">
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/auth')}
+              className="bg-black hover:bg-gray-800 text-white font-light px-12 py-4 text-lg rounded-full"
+              data-testid="get-started-btn"
+            >
+              Begin
+            </Button>
+            <div>
+              <button
+                onClick={() => navigate('/products')}
+                className="text-gray-500 hover:text-gray-700 font-light text-lg underline underline-offset-4"
+              >
+                Browse Collection
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features - Simplified */}
+      <section className="px-6 py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-12 text-center">
+            <div className="space-y-4">
+              <Store className="w-8 h-8 text-gray-700 mx-auto" />
+              <h3 className="text-lg font-medium text-gray-900">Exhibitions</h3>
+              <p className="text-gray-600 font-light leading-relaxed">
+                Manage your exhibitions with simplicity and grace.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <Package className="w-8 h-8 text-gray-700 mx-auto" />
+              <h3 className="text-lg font-medium text-gray-900">Inventory</h3>
+              <p className="text-gray-600 font-light leading-relaxed">
+                Keep track of your products effortlessly.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <BarChart3 className="w-8 h-8 text-gray-700 mx-auto" />
+              <h3 className="text-lg font-medium text-gray-900">Analytics</h3>
+              <p className="text-gray-600 font-light leading-relaxed">
+                Clear insights into your business performance.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA - Minimal */}
+      <section className="px-6 py-20">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl font-light text-gray-900 mb-8">
+            Ready to begin?
+          </h2>
+          <Button 
+            size="lg" 
+            onClick={() => navigate('/auth')}
+            className="bg-black hover:bg-gray-800 text-white font-light px-12 py-4 text-lg rounded-full"
+            data-testid="join-now-btn"
+          >
+            Start Today
           </Button>
         </div>
       </section>
@@ -267,7 +289,7 @@ const LandingPage = () => {
   );
 };
 
-// Authentication Component
+// Elegant Authentication Component
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '', full_name: '', role: 'customer' });
@@ -287,7 +309,7 @@ const AuthPage = () => {
 
     if (result.success) {
       navigate('/dashboard');
-      toast.success(`${isLogin ? 'Login' : 'Registration'} successful!`);
+      toast.success('Welcome!');
     } else {
       setError(result.error);
     }
@@ -295,137 +317,118 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
-          </CardTitle>
-          <CardDescription>
-            {isLogin ? 'Sign in to your account' : 'Join the Badshah-Hakimi platform'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            {!isLogin && (
-              <div>
-                <Label htmlFor="full_name">Full Name</Label>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <div className="max-w-md w-full">
+        {/* Logo */}
+        <div className="text-center mb-12">
+          <div className="w-12 h-12 bg-black rounded-full mx-auto mb-4 flex items-center justify-center">
+            <Store className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-light text-gray-900">
+            {isLogin ? 'Welcome back' : 'Create account'}
+          </h1>
+          <p className="text-gray-600 font-light mt-2">
+            {isLogin ? 'Sign in to continue' : 'Join Badshah Hakimi'}
+          </p>
+        </div>
+
+        {/* Form */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <Alert variant="destructive" className="border-red-200 bg-red-50">
+                  <AlertDescription className="text-red-700 font-light">{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="full_name" className="text-gray-700 font-light">Full Name</Label>
+                  <Input
+                    id="full_name"
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                    required={!isLogin}
+                    className="border-gray-200 focus:border-gray-400 font-light"
+                    data-testid="full-name-input"
+                  />
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-700 font-light">Email</Label>
                 <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  required={!isLogin}
-                  data-testid="full-name-input"
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  className="border-gray-200 focus:border-gray-400 font-light"
+                  data-testid="email-input"
                 />
               </div>
-            )}
-            
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                data-testid="email-input"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                data-testid="password-input"
-              />
-            </div>
-            
-            {!isLogin && (
-              <div>
-                <Label htmlFor="role">Account Type</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value })}
-                >
-                  <SelectTrigger data-testid="role-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="vendor">Vendor</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-700 font-light">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  className="border-gray-200 focus:border-gray-400 font-light"
+                  data-testid="password-input"
+                />
               </div>
-            )}
+              
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="role" className="text-gray-700 font-light">Account Type</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => setFormData({ ...formData, role: value })}
+                  >
+                    <SelectTrigger className="border-gray-200 focus:border-gray-400 font-light" data-testid="role-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer" className="font-light">Customer</SelectItem>
+                      <SelectItem value="vendor" className="font-light">Vendor</SelectItem>
+                      <SelectItem value="admin" className="font-light">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-black hover:bg-gray-800 text-white font-light py-6 rounded-lg"
+                disabled={loading}
+                data-testid="auth-submit-btn"
+              >
+                {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+              </Button>
+            </form>
             
-            <Button type="submit" className="w-full" disabled={loading} data-testid="auth-submit-btn">
-              {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
-            </Button>
-          </form>
-          
-          <div className="text-center mt-4">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-blue-600 hover:underline"
-              data-testid="toggle-auth-mode"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="text-center mt-8">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-gray-600 hover:text-gray-800 font-light underline underline-offset-4"
+                data-testid="toggle-auth-mode"
+              >
+                {isLogin ? "Create new account" : "Sign in instead"}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="App">
-          <Toaster position="top-right" />
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/*" element={<AppRoutes />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
-  );
-}
-
-// App Routes Component (will be continued in next file due to length)
-const AppRoutes = () => {
-  return (
-    <ProtectedRoute>
-      <Header />
-      <main className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/exhibitions" element={<ExhibitionsPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/cart" element={<CartPage />} />
-        </Routes>
-      </main>
-    </ProtectedRoute>
-  );
-};
-
-// Dashboard Component (placeholder - will be implemented in next file)
+// Elegant Dashboard
 const DashboardPage = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
@@ -452,114 +455,156 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading dashboard...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400 text-lg font-light">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8" data-testid="dashboard-title">
-          {user?.role === 'admin' ? 'Admin Dashboard' : 
-           user?.role === 'vendor' ? 'Vendor Dashboard' : 'Customer Dashboard'}
-        </h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        {/* Welcome */}
+        <div className="mb-12">
+          <h1 className="text-4xl font-light text-gray-900 mb-2" data-testid="dashboard-title">
+            Good day, {user?.full_name?.split(' ')[0]}
+          </h1>
+          <p className="text-gray-600 font-light">
+            {user?.role === 'admin' ? 'Your business overview' : 
+             user?.role === 'vendor' ? 'Your vendor dashboard' : 'Your account'}
+          </p>
+        </div>
         
+        {/* Stats for Admin */}
         {user?.role === 'admin' && stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" data-testid="total-sales">
-                  ${stats.total_sales?.toFixed(2) || '0.00'}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <Card className="border-0 shadow-sm bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 font-light text-sm">Sales</p>
+                    <p className="text-2xl font-light text-gray-900" data-testid="total-sales">
+                      ${stats.total_sales?.toFixed(2) || '0.00'}
+                    </p>
+                  </div>
+                  <BarChart3 className="w-8 h-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" data-testid="total-orders">
-                  {stats.total_orders || 0}
+            <Card className="border-0 shadow-sm bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 font-light text-sm">Orders</p>
+                    <p className="text-2xl font-light text-gray-900" data-testid="total-orders">
+                      {stats.total_orders || 0}
+                    </p>
+                  </div>
+                  <Package className="w-8 h-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                <Store className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" data-testid="total-products">
-                  {stats.total_products || 0}
+            <Card className="border-0 shadow-sm bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 font-light text-sm">Products</p>
+                    <p className="text-2xl font-light text-gray-900" data-testid="total-products">
+                      {stats.total_products || 0}
+                    </p>
+                  </div>
+                  <Store className="w-8 h-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold" data-testid="total-customers">
-                  {stats.total_customers || 0}
+            <Card className="border-0 shadow-sm bg-white">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 font-light text-sm">Customers</p>
+                    <p className="text-2xl font-light text-gray-900" data-testid="total-customers">
+                      {stats.total_customers || 0}
+                    </p>
+                  </div>
+                  <Users className="w-8 h-8 text-gray-400" />
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
         
-        <div className="text-center py-20">
-          <h2 className="text-xl font-semibold mb-4">Welcome to your dashboard!</h2>
-          <p className="text-gray-600">More features coming soon...</p>
-        </div>
+        {/* Main Content */}
+        <Card className="border-0 shadow-sm bg-white">
+          <CardContent className="p-12 text-center">
+            <h2 className="text-2xl font-light text-gray-900 mb-4">Everything ready</h2>
+            <p className="text-gray-600 font-light mb-8">
+              Your platform is set up and ready to use.
+            </p>
+            <div className="space-x-4">
+              <Button 
+                variant="outline" 
+                className="border-gray-200 text-gray-700 font-light px-6"
+                onClick={() => window.location.href = '/products'}
+              >
+                View Products
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-gray-200 text-gray-700 font-light px-6"
+                onClick={() => window.location.href = '/exhibitions'}
+              >
+                Manage Exhibitions
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
 
-// Placeholder components (will be fully implemented)
-const ProductsPage = () => (
-  <div className="p-6">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Products</h1>
-      <p>Products page coming soon...</p>
+// App Routes
+const AppRoutes = () => {
+  return (
+    <ProtectedRoute>
+      <Header />
+      <Routes>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/products" element={<ComingSoon title="Products" />} />
+        <Route path="/exhibitions" element={<ComingSoon title="Exhibitions" />} />
+        <Route path="/orders" element={<ComingSoon title="Orders" />} />
+        <Route path="/cart" element={<ComingSoon title="Cart" />} />
+      </Routes>
+    </ProtectedRoute>
+  );
+};
+
+// Coming Soon Component
+const ComingSoon = ({ title }) => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <h1 className="text-3xl font-light text-gray-900 mb-4">{title}</h1>
+      <p className="text-gray-600 font-light">Coming soon...</p>
     </div>
   </div>
 );
 
-const ExhibitionsPage = () => (
-  <div className="p-6">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Exhibitions</h1>
-      <p>Exhibitions page coming soon...</p>
-    </div>
-  </div>
-);
-
-const OrdersPage = () => (
-  <div className="p-6">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Orders</h1>
-      <p>Orders page coming soon...</p>
-    </div>
-  </div>
-);
-
-const CartPage = () => (
-  <div className="p-6">
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-      <p>Cart page coming soon...</p>
-    </div>
-  </div>
-);
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="App font-light">
+          <Toaster position="top-center" />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/*" element={<AppRoutes />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
