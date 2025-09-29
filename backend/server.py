@@ -546,7 +546,206 @@ async def get_sales(
     
     return [SaleResponse(**sale) for sale in sales]
 
-# Analytics Routes
+# Categories Routes
+@api_router.get("/categories", response_model=List[CategoryResponse])
+async def get_categories():
+    categories = await db.categories.find({"is_active": True}).to_list(100)
+    if not categories:
+        # Return sample categories if none exist
+        sample_categories = [
+            {"id": "1", "name": "Perfume Oils", "description": "Premium attar and perfume oils", "is_active": True},
+            {"id": "2", "name": "Incense & Bakhoor", "description": "Traditional bakhoor and incense", "is_active": True},
+            {"id": "3", "name": "Gift Sets", "description": "Curated gift collections", "is_active": True}
+        ]
+        return [CategoryResponse(**cat) for cat in sample_categories]
+    return [CategoryResponse(**cat) for cat in categories]
+
+@api_router.post("/categories", response_model=CategoryResponse)
+async def create_category(
+    name: str,
+    description: Optional[str] = None,
+    current_user: User = Depends(get_admin_user)
+):
+    category = Category(name=name, description=description)
+    await db.categories.insert_one(category.model_dump())
+    return CategoryResponse(**category.model_dump())
+
+# Exhibitions Routes
+@api_router.get("/exhibitions", response_model=List[ExhibitionResponse])
+async def get_exhibitions(current_user: User = Depends(get_current_user)):
+    exhibitions = await db.exhibitions.find().sort("created_at", -1).to_list(100)
+    if not exhibitions:
+        # Return sample exhibitions if none exist
+        sample_exhibitions = [
+            {
+                "id": "1",
+                "name": "Dubai Shopping Festival 2024",
+                "location": "Dubai Mall",
+                "start_date": datetime.utcnow().isoformat(),
+                "end_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                "status": "active",
+                "description": "Annual shopping festival exhibition"
+            }
+        ]
+        return [ExhibitionResponse(**ex) for ex in sample_exhibitions]
+    return [ExhibitionResponse(**ex) for ex in exhibitions]
+
+@api_router.post("/exhibitions", response_model=ExhibitionResponse)
+async def create_exhibition(
+    name: str,
+    location: str,
+    start_date: datetime,
+    end_date: datetime,
+    description: Optional[str] = None,
+    current_user: User = Depends(get_admin_user)
+):
+    exhibition = Exhibition(
+        name=name,
+        location=location,
+        start_date=start_date,
+        end_date=end_date,
+        description=description,
+        created_by=current_user.id
+    )
+    await db.exhibitions.insert_one(exhibition.model_dump())
+    return ExhibitionResponse(**exhibition.model_dump())
+
+# Inventory Routes
+@api_router.get("/inventory/exhibition/{exhibition_id}", response_model=List[InventoryResponse])
+async def get_exhibition_inventory(
+    exhibition_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    inventory = await db.inventory.find({"exhibition_id": exhibition_id}).to_list(1000)
+    if not inventory:
+        # Return sample inventory if none exists
+        sample_inventory = [
+            {
+                "id": "1",
+                "exhibition_id": exhibition_id,
+                "product_id": "1",
+                "product_name": "Oud Royal Attar 12ml",
+                "product_price": 150.0,
+                "allocated_quantity": 25,
+                "sold_quantity": 5,
+                "remaining_quantity": 20
+            },
+            {
+                "id": "2",
+                "exhibition_id": exhibition_id,
+                "product_id": "2",
+                "product_name": "Rose Damascus Oil 10ml",
+                "product_price": 85.0,
+                "allocated_quantity": 40,
+                "sold_quantity": 8,
+                "remaining_quantity": 32
+            },
+            {
+                "id": "3",
+                "exhibition_id": exhibition_id,
+                "product_id": "3",
+                "product_name": "Sandalwood Bakhoor 50g",
+                "product_price": 65.0,
+                "allocated_quantity": 60,
+                "sold_quantity": 12,
+                "remaining_quantity": 48
+            }
+        ]
+        return [InventoryResponse(**item) for item in sample_inventory]
+    return [InventoryResponse(**item) for item in inventory]
+
+# Enhanced Sales Route with Multi-Payment Support
+@api_router.post("/sales/enhanced", response_model=Dict[str, Any])
+async def create_enhanced_sale(
+    sale_data: EnhancedSaleCreate,
+    current_user: User = Depends(get_current_user)
+):
+    # Generate sale number
+    sale_number = f"SALE-{datetime.utcnow().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    
+    # Calculate totals
+    subtotal = 0
+    sale_items = []
+    
+    for item_data in sale_data.items:
+        product_id = item_data["product_id"]
+        quantity = item_data["quantity"]
+        price = item_data["price"]
+        
+        # Get product details (from inventory or products)
+        inventory_item = await db.inventory.find_one({
+            "exhibition_id": sale_data.exhibition_id,
+            "product_id": product_id
+        })
+        
+        if inventory_item:
+            product_name = inventory_item["product_name"]
+        else:
+            product = await db.products.find_one({"id": product_id})
+            product_name = product["name"] if product else f"Product {product_id}"
+        
+        item_total = price * quantity
+        subtotal += item_total
+        
+        sale_items.append(SaleItem(
+            product_id=product_id,
+            product_name=product_name,
+            quantity=quantity,
+            unit_price=price,
+            total_price=item_total,
+            variation_selection={}
+        ))
+    
+    # Calculate tax and total
+    tax_amount = subtotal * 0.05  # 5% tax
+    total_amount = subtotal + tax_amount
+    
+    # Calculate payments and change
+    total_paid = sum(payment.amount for payment in sale_data.payments)
+    change_given = max(0, total_paid - total_amount)
+    
+    # Create sale record
+    sale = EnhancedSale(
+        exhibition_id=sale_data.exhibition_id,
+        sale_number=sale_number,
+        cashier_id=current_user.id,
+        cashier_name=current_user.full_name,
+        customer_name=sale_data.customer_name,
+        customer_phone=sale_data.customer_phone,
+        customer_email=sale_data.customer_email,
+        items=sale_items,
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
+        payments=sale_data.payments,
+        change_given=change_given
+    )
+    
+    # Save to database
+    await db.enhanced_sales.insert_one(sale.model_dump())
+    
+    # Update inventory
+    for item_data in sale_data.items:
+        await db.inventory.update_one(
+            {
+                "exhibition_id": sale_data.exhibition_id,
+                "product_id": item_data["product_id"]
+            },
+            {
+                "$inc": {
+                    "sold_quantity": item_data["quantity"],
+                    "remaining_quantity": -item_data["quantity"]
+                }
+            }
+        )
+    
+    return {
+        "success": True,
+        "sale_number": sale_number,
+        "total_amount": total_amount,
+        "change_given": change_given,
+        "id": sale.id
+    }
 @api_router.get("/analytics/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
     # Calculate stats
