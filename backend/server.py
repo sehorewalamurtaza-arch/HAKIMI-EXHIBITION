@@ -802,7 +802,23 @@ async def get_exhibition_sales(
         ]
         return sample_sales
     
-    return sales
+    # Clean up sales data for JSON serialization
+    cleaned_sales = []
+    for sale in sales:
+        # Remove MongoDB ObjectId and convert to clean dict
+        cleaned_sale = {
+            "id": sale.get("id", str(sale.get("_id", ""))),
+            "sale_number": sale.get("sale_number", ""),
+            "exhibition_id": sale.get("exhibition_id", ""),
+            "customer_name": sale.get("customer_name", ""),
+            "customer_phone": sale.get("customer_phone", ""),
+            "total_amount": sale.get("total_amount", 0.0),
+            "change_given": sale.get("change_given", 0.0),
+            "created_at": sale.get("created_at").isoformat() if sale.get("created_at") else datetime.utcnow().isoformat()
+        }
+        cleaned_sales.append(cleaned_sale)
+    
+    return cleaned_sales
 
 # Leads by Exhibition Routes
 @api_router.get("/leads/exhibition/{exhibition_id}")
