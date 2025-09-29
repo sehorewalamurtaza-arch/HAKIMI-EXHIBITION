@@ -9,8 +9,14 @@ import { Badge } from './components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select';
 import { Alert, AlertDescription } from './components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table';
 import { toast, Toaster } from './components/ui/sonner';
-import { ShoppingCart, User, LogOut, BarChart3, Package, Users, Store } from 'lucide-react';
+import { 
+  ShoppingCart, User, LogOut, BarChart3, Package, Users, Store, 
+  Plus, Settings, DollarSign, Eye, Edit, Trash2, UserPlus, 
+  ShoppingBag, Calculator, Scan
+} from 'lucide-react';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -57,16 +63,7 @@ const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.detail || 'Login failed' };
-    }
-  };
-
-  const register = async (email, password, full_name, role = 'customer') => {
-    try {
-      await axios.post(`${API}/auth/register`, { email, password, full_name, role });
-      return await login(email, password);
-    } catch (error) {
-      return { success: false, error: error.response?.data?.detail || 'Registration failed' };
+      return { success: false, error: error.response?.data?.detail || 'Invalid credentials' };
     }
   };
 
@@ -77,7 +74,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -94,7 +91,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       <div className="text-gray-400 text-lg font-light">Loading...</div>
     </div>
   );
-  if (!user) return <Navigate to="/auth" />;
+  if (!user) return <Navigate to="/login" />;
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     return <Navigate to="/dashboard" />;
   }
@@ -106,79 +103,68 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [cart, setCart] = useState({ items: [], total_amount: 0 });
-
-  useEffect(() => {
-    if (user?.role === 'customer') {
-      fetchCart();
-    }
-  }, [user]);
-
-  const fetchCart = async () => {
-    try {
-      const response = await axios.get(`${API}/cart`);
-      setCart(response.data);
-    } catch (error) {
-      console.error('Failed to fetch cart:', error);
-    }
-  };
 
   const handleLogout = () => {
     logout();
-    navigate('/auth');
+    navigate('/login');
   };
+
+  const navItems = [
+    { label: 'Dashboard', path: '/dashboard', icon: BarChart3 },
+    { label: 'POS', path: '/pos', icon: Calculator },
+    { label: 'Inventory', path: '/inventory', icon: Package },
+    ...(user?.role === 'admin' ? [{ label: 'Users', path: '/users', icon: Users }] : [])
+  ];
 
   return (
     <header className="bg-white border-b border-gray-100">
-      <div className="max-w-6xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/dashboard" className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
               <Store className="w-4 h-4 text-white" />
             </div>
             <span className="text-xl font-light text-gray-900">Badshah Hakimi</span>
           </Link>
 
+          {/* Navigation */}
+          <nav className="hidden md:flex space-x-8">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-light transition-colors"
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
           {/* User Info */}
-          <div className="flex items-center space-x-6">
-            {user?.role === 'customer' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/cart')}
-                className="relative text-gray-600 hover:text-gray-900"
-                data-testid="cart-button"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {cart.items?.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cart.items.length}
-                  </span>
-                )}
-              </Button>
-            )}
-            
-            <div className="flex items-center space-x-3">
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">{user?.full_name}</div>
-                <div className="text-xs text-gray-500 capitalize">{user?.role}</div>
-              </div>
-              <Avatar className="w-9 h-9">
-                <AvatarFallback className="bg-gray-100 text-gray-600 font-medium">
-                  {user?.full_name?.charAt(0)?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-gray-400 hover:text-gray-600"
-                data-testid="logout-button"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <div className="text-sm font-medium text-gray-900">{user?.full_name}</div>
+              <div className="text-xs text-gray-500 capitalize">{user?.role}</div>
             </div>
+            <Avatar className="w-9 h-9">
+              <AvatarFallback className="bg-gray-100 text-gray-600 font-medium">
+                {user?.full_name?.charAt(0)?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-gray-600"
+              data-testid="logout-button"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -186,116 +172,12 @@ const Header = () => {
   );
 };
 
-// Landing Page
-const LandingPage = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  if (user) {
-    navigate('/dashboard');
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="px-6 py-24">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Logo */}
-          <div className="mb-12">
-            <div className="w-16 h-16 bg-black rounded-full mx-auto mb-6 flex items-center justify-center">
-              <Store className="w-8 h-8 text-white" />
-            </div>
-          </div>
-          
-          <h1 className="text-6xl md:text-7xl font-light text-gray-900 mb-8 tracking-tight">
-            Badshah
-            <br />
-            <span className="text-4xl md:text-5xl text-gray-500">Hakimi</span>
-          </h1>
-          
-          <p className="text-xl font-light text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-            A refined platform for exhibition sales.
-            <br />Simple, elegant, effective.
-          </p>
-          
-          <div className="space-y-4">
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/auth')}
-              className="bg-black hover:bg-gray-800 text-white font-light px-12 py-4 text-lg rounded-full"
-              data-testid="get-started-btn"
-            >
-              Begin
-            </Button>
-            <div>
-              <button
-                onClick={() => navigate('/products')}
-                className="text-gray-500 hover:text-gray-700 font-light text-lg underline underline-offset-4"
-              >
-                Browse Collection
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features - Simplified */}
-      <section className="px-6 py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-12 text-center">
-            <div className="space-y-4">
-              <Store className="w-8 h-8 text-gray-700 mx-auto" />
-              <h3 className="text-lg font-medium text-gray-900">Exhibitions</h3>
-              <p className="text-gray-600 font-light leading-relaxed">
-                Manage your exhibitions with simplicity and grace.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <Package className="w-8 h-8 text-gray-700 mx-auto" />
-              <h3 className="text-lg font-medium text-gray-900">Inventory</h3>
-              <p className="text-gray-600 font-light leading-relaxed">
-                Keep track of your products effortlessly.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <BarChart3 className="w-8 h-8 text-gray-700 mx-auto" />
-              <h3 className="text-lg font-medium text-gray-900">Analytics</h3>
-              <p className="text-gray-600 font-light leading-relaxed">
-                Clear insights into your business performance.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA - Minimal */}
-      <section className="px-6 py-20">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-light text-gray-900 mb-8">
-            Ready to begin?
-          </h2>
-          <Button 
-            size="lg" 
-            onClick={() => navigate('/auth')}
-            className="bg-black hover:bg-gray-800 text-white font-light px-12 py-4 text-lg rounded-full"
-            data-testid="join-now-btn"
-          >
-            Start Today
-          </Button>
-        </div>
-      </section>
-    </div>
-  );
-};
-
-// Elegant Authentication Component
-const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ email: '', password: '', full_name: '', role: 'customer' });
+// Simple Login Page
+const LoginPage = () => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login, register } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -303,13 +185,11 @@ const AuthPage = () => {
     setLoading(true);
     setError('');
 
-    const result = isLogin 
-      ? await login(formData.email, formData.password)
-      : await register(formData.email, formData.password, formData.full_name, formData.role);
+    const result = await login(formData.email, formData.password);
 
     if (result.success) {
       navigate('/dashboard');
-      toast.success('Welcome!');
+      toast.success('Welcome back!');
     } else {
       setError(result.error);
     }
@@ -321,15 +201,11 @@ const AuthPage = () => {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-12">
-          <div className="w-12 h-12 bg-black rounded-full mx-auto mb-4 flex items-center justify-center">
-            <Store className="w-6 h-6 text-white" />
+          <div className="w-16 h-16 bg-black rounded-full mx-auto mb-6 flex items-center justify-center">
+            <Store className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-light text-gray-900">
-            {isLogin ? 'Welcome back' : 'Create account'}
-          </h1>
-          <p className="text-gray-600 font-light mt-2">
-            {isLogin ? 'Sign in to continue' : 'Join Badshah Hakimi'}
-          </p>
+          <h1 className="text-4xl font-light text-gray-900 mb-2">Badshah Hakimi</h1>
+          <p className="text-gray-600 font-light">POS & Inventory System</p>
         </div>
 
         {/* Form */}
@@ -342,20 +218,6 @@ const AuthPage = () => {
                 </Alert>
               )}
               
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-gray-700 font-light">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    required={!isLogin}
-                    className="border-gray-200 focus:border-gray-400 font-light"
-                    data-testid="full-name-input"
-                  />
-                </div>
-              )}
-              
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-light">Email</Label>
                 <Input
@@ -364,8 +226,9 @@ const AuthPage = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="border-gray-200 focus:border-gray-400 font-light"
+                  className="border-gray-200 focus:border-gray-400 font-light h-12"
                   data-testid="email-input"
+                  placeholder="admin@badshah-hakimi.com"
                 />
               </div>
               
@@ -377,58 +240,33 @@ const AuthPage = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  className="border-gray-200 focus:border-gray-400 font-light"
+                  className="border-gray-200 focus:border-gray-400 font-light h-12"
                   data-testid="password-input"
+                  placeholder="Enter password"
                 />
               </div>
               
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="role" className="text-gray-700 font-light">Account Type</Label>
-                  <Select
-                    value={formData.role}
-                    onValueChange={(value) => setFormData({ ...formData, role: value })}
-                  >
-                    <SelectTrigger className="border-gray-200 focus:border-gray-400 font-light" data-testid="role-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="customer" className="font-light">Customer</SelectItem>
-                      <SelectItem value="vendor" className="font-light">Vendor</SelectItem>
-                      <SelectItem value="admin" className="font-light">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
               <Button 
                 type="submit" 
-                className="w-full bg-black hover:bg-gray-800 text-white font-light py-6 rounded-lg"
+                className="w-full bg-black hover:bg-gray-800 text-white font-light py-6 rounded-lg text-lg"
                 disabled={loading}
-                data-testid="auth-submit-btn"
+                data-testid="login-submit-btn"
               >
-                {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+                {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-            
-            <div className="text-center mt-8">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-gray-600 hover:text-gray-800 font-light underline underline-offset-4"
-                data-testid="toggle-auth-mode"
-              >
-                {isLogin ? "Create new account" : "Sign in instead"}
-              </button>
-            </div>
           </CardContent>
         </Card>
+
+        <div className="text-center mt-8 text-sm text-gray-500 font-light">
+          Contact admin for access
+        </div>
       </div>
     </div>
   );
 };
 
-// Elegant Dashboard
+// Dashboard
 const DashboardPage = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
@@ -463,31 +301,63 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-light text-gray-900 mb-2" data-testid="dashboard-title">
+        <div className="mb-8">
+          <h1 className="text-3xl font-light text-gray-900 mb-2" data-testid="dashboard-title">
             Good day, {user?.full_name?.split(' ')[0]}
           </h1>
           <p className="text-gray-600 font-light">
-            {user?.role === 'admin' ? 'Your business overview' : 
-             user?.role === 'vendor' ? 'Your vendor dashboard' : 'Your account'}
+            {user?.role === 'admin' ? 'System Overview' : 
+             user?.role === 'cashier' ? 'Ready for sales' : 'Inventory Dashboard'}
           </p>
+        </div>
+        
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => window.location.href = '/pos'}>
+            <CardContent className="p-6 text-center">
+              <Calculator className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Point of Sale</h3>
+              <p className="text-gray-600 font-light">Process customer transactions</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => window.location.href = '/inventory'}>
+            <CardContent className="p-6 text-center">
+              <Package className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Inventory</h3>
+              <p className="text-gray-600 font-light">Manage products and stock</p>
+            </CardContent>
+          </Card>
+          
+          {user?.role === 'admin' && (
+            <Card className="border-0 shadow-sm bg-white hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => window.location.href = '/users'}>
+              <CardContent className="p-6 text-center">
+                <Users className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">User Management</h3>
+                <p className="text-gray-600 font-light">Manage staff access</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Stats for Admin */}
         {user?.role === 'admin' && stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card className="border-0 shadow-sm bg-white">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 font-light text-sm">Sales</p>
+                    <p className="text-gray-600 font-light text-sm">Today's Sales</p>
                     <p className="text-2xl font-light text-gray-900" data-testid="total-sales">
                       ${stats.total_sales?.toFixed(2) || '0.00'}
                     </p>
                   </div>
-                  <BarChart3 className="w-8 h-8 text-gray-400" />
+                  <DollarSign className="w-8 h-8 text-green-500" />
                 </div>
               </CardContent>
             </Card>
@@ -501,7 +371,7 @@ const DashboardPage = () => {
                       {stats.total_orders || 0}
                     </p>
                   </div>
-                  <Package className="w-8 h-8 text-gray-400" />
+                  <ShoppingBag className="w-8 h-8 text-blue-500" />
                 </div>
               </CardContent>
             </Card>
@@ -515,7 +385,7 @@ const DashboardPage = () => {
                       {stats.total_products || 0}
                     </p>
                   </div>
-                  <Store className="w-8 h-8 text-gray-400" />
+                  <Package className="w-8 h-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>
@@ -524,41 +394,199 @@ const DashboardPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 font-light text-sm">Customers</p>
-                    <p className="text-2xl font-light text-gray-900" data-testid="total-customers">
+                    <p className="text-gray-600 font-light text-sm">Staff</p>
+                    <p className="text-2xl font-light text-gray-900" data-testid="total-users">
                       {stats.total_customers || 0}
                     </p>
                   </div>
-                  <Users className="w-8 h-8 text-gray-400" />
+                  <Users className="w-8 h-8 text-orange-500" />
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// User Management (Admin only)
+const UsersPage = () => {
+  const { user } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ full_name: '', email: '', role: 'cashier', password: '' });
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchUsers();
+    }
+  }, [user]);
+
+  const fetchUsers = async () => {
+    try {
+      // This would be a new endpoint to fetch all users
+      const response = await axios.get(`${API}/users`);
+      setUsers(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/auth/register`, newUser);
+      toast.success('User created successfully!');
+      setNewUser({ full_name: '', email: '', role: 'cashier', password: '' });
+      setShowAddUser(false);
+      fetchUsers();
+    } catch (error) {
+      toast.error('Failed to create user');
+    }
+  };
+
+  if (user?.role !== 'admin') {
+    return <Navigate to="/dashboard" />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400 text-lg font-light">Loading users...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-light text-gray-900 mb-2">User Management</h1>
+            <p className="text-gray-600 font-light">Manage staff access and roles</p>
+          </div>
+          
+          <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
+            <DialogTrigger asChild>
+              <Button className="bg-black hover:bg-gray-800 text-white font-light px-6">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Staff
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="font-light">Add New Staff Member</DialogTitle>
+                <DialogDescription className="font-light">
+                  Create access for new staff member
+                </DialogDescription>
+              </DialogHeader>
+              
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="font-light">Full Name</Label>
+                  <Input
+                    value={newUser.full_name}
+                    onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                    required
+                    className="font-light"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-light">Email</Label>
+                  <Input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    required
+                    className="font-light"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-light">Role</Label>
+                  <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
+                    <SelectTrigger className="font-light">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cashier" className="font-light">Cashier (POS Access)</SelectItem>
+                      <SelectItem value="inventory" className="font-light">Inventory Manager</SelectItem>
+                      <SelectItem value="admin" className="font-light">Admin (Full Access)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-light">Password</Label>
+                  <Input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    required
+                    className="font-light"
+                  />
+                </div>
+                
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setShowAddUser(false)} className="font-light">
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-black hover:bg-gray-800 font-light">
+                    Create User
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
         
-        {/* Main Content */}
-        <Card className="border-0 shadow-sm bg-white">
-          <CardContent className="p-12 text-center">
-            <h2 className="text-2xl font-light text-gray-900 mb-4">Everything ready</h2>
-            <p className="text-gray-600 font-light mb-8">
-              Your platform is set up and ready to use.
-            </p>
-            <div className="space-x-4">
-              <Button 
-                variant="outline" 
-                className="border-gray-200 text-gray-700 font-light px-6"
-                onClick={() => window.location.href = '/products'}
-              >
-                View Products
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-gray-200 text-gray-700 font-light px-6"
-                onClick={() => window.location.href = '/exhibitions'}
-              >
-                Manage Exhibitions
-              </Button>
-            </div>
+        {/* Users Table */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-gray-100">
+                  <TableHead className="font-light">Name</TableHead>
+                  <TableHead className="font-light">Email</TableHead>
+                  <TableHead className="font-light">Role</TableHead>
+                  <TableHead className="font-light">Status</TableHead>
+                  <TableHead className="font-light">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.id} className="border-gray-100">
+                    <TableCell className="font-medium">{u.full_name}</TableCell>
+                    <TableCell className="text-gray-600 font-light">{u.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="font-light">
+                        {u.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={u.is_active ? 'default' : 'secondary'} className="font-light">
+                        {u.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
@@ -573,19 +601,20 @@ const AppRoutes = () => {
       <Header />
       <Routes>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/products" element={<ComingSoon title="Products" />} />
-        <Route path="/exhibitions" element={<ComingSoon title="Exhibitions" />} />
-        <Route path="/orders" element={<ComingSoon title="Orders" />} />
-        <Route path="/cart" element={<ComingSoon title="Cart" />} />
+        <Route path="/pos" element={<ComingSoon title="Point of Sale" icon={Calculator} />} />
+        <Route path="/inventory" element={<ComingSoon title="Inventory Management" icon={Package} />} />
+        <Route path="/users" element={<UsersPage />} />
+        <Route path="/*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </ProtectedRoute>
   );
 };
 
 // Coming Soon Component
-const ComingSoon = ({ title }) => (
+const ComingSoon = ({ title, icon: Icon }) => (
   <div className="min-h-screen bg-gray-50 flex items-center justify-center">
     <div className="text-center">
+      <Icon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
       <h1 className="text-3xl font-light text-gray-900 mb-4">{title}</h1>
       <p className="text-gray-600 font-light">Coming soon...</p>
     </div>
@@ -593,14 +622,16 @@ const ComingSoon = ({ title }) => (
 );
 
 export default function App() {
+  const { user } = useAuth();
+  
   return (
     <AuthProvider>
       <BrowserRouter>
         <div className="App font-light">
           <Toaster position="top-center" />
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
+            <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
             <Route path="/*" element={<AppRoutes />} />
           </Routes>
         </div>
