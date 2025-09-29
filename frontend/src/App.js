@@ -502,13 +502,13 @@ const UsersPage = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="font-light">Email</Label>
+                  <Label className="font-light">Username</Label>
                   <Input
-                    type="email"
-                    value={newUser.email}
-                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                     required
                     className="font-light"
+                    placeholder="e.g. sarah_j"
                   />
                 </div>
                 
