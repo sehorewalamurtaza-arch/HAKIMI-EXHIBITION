@@ -581,8 +581,8 @@ async def get_exhibitions(current_user: User = Depends(get_current_user)):
                 "id": "1",
                 "name": "Dubai Shopping Festival 2024",
                 "location": "Dubai Mall",
-                "start_date": datetime.utcnow().isoformat(),
-                "end_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                "start_date": datetime.utcnow(),
+                "end_date": (datetime.utcnow() + timedelta(days=30)),
                 "status": "active",
                 "description": "Annual shopping festival exhibition"
             }
