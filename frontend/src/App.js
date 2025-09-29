@@ -557,7 +557,7 @@ const UsersPage = () => {
               <TableHeader>
                 <TableRow className="border-gray-100">
                   <TableHead className="font-light">Name</TableHead>
-                  <TableHead className="font-light">Email</TableHead>
+                  <TableHead className="font-light">Username</TableHead>
                   <TableHead className="font-light">Role</TableHead>
                   <TableHead className="font-light">Status</TableHead>
                   <TableHead className="font-light">Actions</TableHead>
