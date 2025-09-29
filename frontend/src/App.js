@@ -174,7 +174,7 @@ const Header = () => {
 
 // Simple Login Page
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -185,7 +185,7 @@ const LoginPage = () => {
     setLoading(true);
     setError('');
 
-    const result = await login(formData.email, formData.password);
+    const result = await login(formData.username, formData.password);
 
     if (result.success) {
       navigate('/dashboard');
@@ -219,16 +219,16 @@ const LoginPage = () => {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700 font-light">Email</Label>
+                <Label htmlFor="username" className="text-gray-700 font-light">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  id="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   required
                   className="border-gray-200 focus:border-gray-400 font-light h-12"
-                  data-testid="email-input"
-                  placeholder="admin@badshah-hakimi.com"
+                  data-testid="username-input"
+                  placeholder="Enter username"
                 />
               </div>
               
@@ -258,8 +258,13 @@ const LoginPage = () => {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-8 text-sm text-gray-500 font-light">
-          Contact admin for access
+        <div className="text-center mt-8">
+          <div className="text-sm text-gray-500 font-light mb-2">
+            Default Login: <span className="font-medium">admin</span> / <span className="font-medium">admin123</span>
+          </div>
+          <div className="text-xs text-gray-400 font-light">
+            Contact admin for staff access
+          </div>
         </div>
       </div>
     </div>
