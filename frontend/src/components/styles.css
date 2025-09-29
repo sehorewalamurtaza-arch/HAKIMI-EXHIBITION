@@ -1,0 +1,106 @@
+/* Modal Styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-screen overflow-auto p-6;
+}
+
+/* Form Styles */
+.form-input, .form-select {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors;
+}
+
+.form-select {
+  @apply bg-white;
+}
+
+.form-input:focus, .form-select:focus {
+  @apply outline-none;
+}
+
+/* Additional Grid Classes */
+.grid-3 {
+  @apply grid grid-cols-1 sm:grid-cols-3 gap-4;
+}
+
+/* Button Variants */
+.btn-danger {
+  @apply bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors;
+}
+
+/* Status Badge Variants */
+.status-new {
+  @apply bg-blue-100 text-blue-800;
+}
+
+/* Expense Categories */
+.expense-category {
+  @apply p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow cursor-pointer;
+}
+
+.expense-category.selected {
+  @apply border-amber-500 bg-amber-50;
+}
+
+/* POS Styles */
+.pos-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-6 h-full;
+}
+
+.pos-products {
+  @apply lg:col-span-2 bg-white rounded-xl p-6 shadow-lg;
+}
+
+.pos-cart {
+  @apply bg-white rounded-xl p-6 shadow-lg;
+}
+
+.product-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4;
+}
+
+.product-card {
+  @apply bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer border;
+}
+
+.product-card:hover {
+  @apply shadow-md;
+}
+
+.cart-item {
+  @apply flex items-center justify-between p-3 bg-gray-50 rounded-lg;
+}
+
+/* Quick amount buttons */
+.amount-btn {
+  @apply bg-gray-100 hover:bg-amber-100 border border-gray-300 hover:border-amber-300 px-3 py-1 rounded text-sm transition-colors;
+}
+
+.amount-btn.selected {
+  @apply bg-amber-500 text-white border-amber-500;
+}
+
+/* Daily input styles */
+.daily-input {
+  @apply w-20 px-2 py-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-amber-500 focus:border-amber-500;
+}
+
+/* Summary cards */
+.summary-card {
+  @apply bg-white p-4 rounded-xl shadow-sm border;
+}
+
+/* Tabs */
+.tab-button {
+  @apply px-4 py-2 font-semibold text-sm border-b-2 transition-colors;
+}
+
+.tab-button.active {
+  @apply border-amber-500 text-amber-600;
+}
+
+.tab-button.inactive {
+  @apply border-transparent text-gray-500 hover:text-gray-700;
+}
