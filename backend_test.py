@@ -270,15 +270,18 @@ class POSAPITester:
     
     def run_all_tests(self):
         """Run all API tests"""
-        print("🚀 Starting POS System API Tests")
-        print("=" * 50)
+        print("🚀 Starting FINAL BACKEND API VALIDATION TESTS")
+        print("=" * 60)
         
         results = {
             "authentication": False,
-            "exhibitions": False,
+            "exhibitions_get": False,
+            "exhibition_creation": False,
             "categories": False,
             "inventory": False,
-            "enhanced_sales": False
+            "enhanced_sales": False,
+            "sales_by_exhibition": False,
+            "leads_by_exhibition": False
         }
         
         # Test authentication first
@@ -288,34 +291,60 @@ class POSAPITester:
         
         results["authentication"] = True
         
-        # Test exhibitions API
-        success, data = self.test_exhibitions_api()
-        results["exhibitions"] = success
+        # Test exhibitions GET API
+        success, exhibitions_data = self.test_exhibitions_api()
+        results["exhibitions_get"] = success
+        
+        # Test exhibition creation API
+        success, new_exhibition_data = self.test_exhibition_creation_api()
+        results["exhibition_creation"] = success
+        
+        # Get exhibition ID for subsequent tests
+        exhibition_id = "1"  # Default fallback
+        if new_exhibition_data:
+            exhibition_id = new_exhibition_data["id"]
+            print(f"\n🎯 Using newly created exhibition ID: {exhibition_id} for subsequent tests")
+        elif exhibitions_data and len(exhibitions_data) > 0:
+            exhibition_id = exhibitions_data[0]["id"]
+            print(f"\n🎯 Using existing exhibition ID: {exhibition_id} for subsequent tests")
         
         # Test categories API
         success, data = self.test_categories_api()
         results["categories"] = success
         
-        # Test inventory API
-        success, data = self.test_inventory_api()
+        # Test inventory API with exhibition ID
+        success, data = self.test_inventory_api(exhibition_id)
         results["inventory"] = success
         
-        # Test enhanced sales API
-        success, data = self.test_enhanced_sales_api()
+        # Test enhanced sales API with exhibition ID
+        success, data = self.test_enhanced_sales_api(exhibition_id)
         results["enhanced_sales"] = success
         
+        # Test sales by exhibition API
+        success, data = self.test_sales_by_exhibition_api(exhibition_id)
+        results["sales_by_exhibition"] = success
+        
+        # Test leads by exhibition API
+        success, data = self.test_leads_by_exhibition_api(exhibition_id)
+        results["leads_by_exhibition"] = success
+        
         # Print summary
-        print("\n" + "=" * 50)
-        print("📊 TEST RESULTS SUMMARY")
-        print("=" * 50)
+        print("\n" + "=" * 60)
+        print("📊 FINAL BACKEND API VALIDATION RESULTS")
+        print("=" * 60)
         
         for test_name, passed in results.items():
             status = "✅ PASS" if passed else "❌ FAIL"
-            print(f"{test_name.upper()}: {status}")
+            print(f"{test_name.upper().replace('_', ' ')}: {status}")
         
         total_tests = len(results)
         passed_tests = sum(results.values())
         print(f"\nOverall: {passed_tests}/{total_tests} tests passed")
+        
+        if passed_tests == total_tests:
+            print("\n🎉 ALL BACKEND APIs ARE WORKING PROPERLY!")
+        else:
+            print(f"\n⚠️ {total_tests - passed_tests} API(s) need attention")
         
         return results
 
