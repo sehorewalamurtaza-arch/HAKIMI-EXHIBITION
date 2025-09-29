@@ -128,6 +128,9 @@
       - working: true
         agent: "main"
         comment: "Products and Categories APIs implemented with sample data"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /categories API working perfectly. Returns 3 sample categories (Perfume Oils, Incense & Bakhoor, Gift Sets) with proper descriptions."
 
   - task: "Exhibition Management System"
     implemented: true
