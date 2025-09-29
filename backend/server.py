@@ -754,15 +754,28 @@ async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
     ]).to_list(1)
     total_sales = total_sales[0]["total"] if total_sales else 0.0
     
-    total_transactions = await db.sales.count_documents({})
+    # Add enhanced sales
+    enhanced_sales = await db.enhanced_sales.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
+    ]).to_list(1)
+    total_sales += enhanced_sales[0]["total"] if enhanced_sales else 0.0
+    
+    total_transactions = await db.sales.count_documents({}) + await db.enhanced_sales.count_documents({})
     total_products = await db.products.count_documents({"status": "active"})
     total_users = await db.users.count_documents({})
     low_stock_products = await db.products.count_documents({
         "$expr": {"$lte": ["$stock_quantity", "$min_stock_level"]}
     })
     
-    # Get recent sales
-    recent_sales = await db.sales.find().sort("created_at", -1).limit(5).to_list(5)
+    # Exhibition stats
+    total_exhibitions = await db.exhibitions.count_documents({})
+    active_exhibitions = await db.exhibitions.count_documents({"status": "active"})
+    
+    # Get recent sales (both regular and enhanced)
+    recent_sales = await db.enhanced_sales.find().sort("created_at", -1).limit(5).to_list(5)
+    if len(recent_sales) < 5:
+        regular_sales = await db.sales.find().sort("created_at", -1).limit(5 - len(recent_sales)).to_list(5 - len(recent_sales))
+        recent_sales.extend(regular_sales)
     
     # Get top selling products
     top_selling = await db.sales.aggregate([
@@ -780,6 +793,8 @@ async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
     sales_chart = []
     for i in range(7):
         date = datetime.now() - timedelta(days=i)
+        
+        # Regular sales
         daily_sales = await db.sales.aggregate([
             {
                 "$match": {
@@ -792,9 +807,24 @@ async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
             {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
         ]).to_list(1)
         
+        # Enhanced sales
+        enhanced_daily_sales = await db.enhanced_sales.aggregate([
+            {
+                "$match": {
+                    "created_at": {
+                        "$gte": date.replace(hour=0, minute=0, second=0),
+                        "$lt": date.replace(hour=23, minute=59, second=59)
+                    }
+                }
+            },
+            {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
+        ]).to_list(1)
+        
+        total_daily = (daily_sales[0]["total"] if daily_sales else 0.0) + (enhanced_daily_sales[0]["total"] if enhanced_daily_sales else 0.0)
+        
         sales_chart.append({
             "date": date.strftime("%Y-%m-%d"),
-            "sales": daily_sales[0]["total"] if daily_sales else 0.0
+            "sales": total_daily
         })
     
     return DashboardStats(
@@ -805,7 +835,9 @@ async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
         low_stock_products=low_stock_products,
         recent_sales=recent_sales,
         top_selling_products=top_selling,
-        sales_chart_data=list(reversed(sales_chart))
+        sales_chart_data=list(reversed(sales_chart)),
+        total_exhibitions=total_exhibitions,
+        active_exhibitions=active_exhibitions
     )
 
 # Health check
