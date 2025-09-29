@@ -421,7 +421,7 @@ const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ full_name: '', email: '', role: 'cashier', password: '' });
+  const [newUser, setNewUser] = useState({ full_name: '', username: '', role: 'cashier', password: '' });
 
   useEffect(() => {
     if (user?.role === 'admin') {
