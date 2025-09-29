@@ -615,23 +615,32 @@ async def get_exhibitions(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/exhibitions", response_model=ExhibitionResponse)
 async def create_exhibition(
-    name: str,
-    location: str,
-    start_date: datetime,
-    end_date: datetime,
-    description: Optional[str] = None,
+    exhibition_data: ExhibitionCreate,
     current_user: User = Depends(get_admin_user)
 ):
     exhibition = Exhibition(
-        name=name,
-        location=location,
-        start_date=start_date,
-        end_date=end_date,
-        description=description,
-        created_by=current_user.id
+        name=exhibition_data.name,
+        location=exhibition_data.location,
+        start_date=exhibition_data.start_date,
+        end_date=exhibition_data.end_date,
+        description=exhibition_data.description,
+        created_by=current_user.id,
+        status=ExhibitionStatus.ACTIVE  # Default to active
     )
+    
+    # Save to database
     await db.exhibitions.insert_one(exhibition.model_dump())
-    return ExhibitionResponse(**exhibition.model_dump())
+    
+    # Return response
+    return ExhibitionResponse(
+        id=exhibition.id,
+        name=exhibition.name,
+        location=exhibition.location,
+        start_date=exhibition.start_date,
+        end_date=exhibition.end_date,
+        status=exhibition.status,
+        description=exhibition.description
+    )
 
 # Inventory Routes
 @api_router.get("/inventory/exhibition/{exhibition_id}", response_model=List[InventoryResponse])
