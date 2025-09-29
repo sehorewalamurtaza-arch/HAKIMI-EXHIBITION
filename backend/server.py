@@ -588,7 +588,23 @@ async def get_exhibitions(current_user: User = Depends(get_current_user)):
             }
         ]
         return [ExhibitionResponse(**ex) for ex in sample_exhibitions]
-    return [ExhibitionResponse(**ex) for ex in exhibitions]
+    
+    # Clean up database exhibitions data for response
+    cleaned_exhibitions = []
+    for ex in exhibitions:
+        # Remove MongoDB ObjectId and ensure required fields
+        cleaned_ex = {
+            "id": ex.get("id", str(ex.get("_id", ""))),
+            "name": ex.get("name", ""),
+            "location": ex.get("location", ""),
+            "start_date": ex.get("start_date"),
+            "end_date": ex.get("end_date"),
+            "status": ex.get("status", "active"),
+            "description": ex.get("description")
+        }
+        cleaned_exhibitions.append(cleaned_ex)
+    
+    return [ExhibitionResponse(**ex) for ex in cleaned_exhibitions]
 
 @api_router.post("/exhibitions", response_model=ExhibitionResponse)
 async def create_exhibition(
