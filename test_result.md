@@ -222,9 +222,9 @@
 
 ## test_plan:
   current_focus:
-    - "Authentication System with JWT and Role-based Access"
-    - "Product Management APIs with Rich Media Support"
-    - "Multi-user Dashboard (Admin/Vendor/Customer)"
+    - "Inventory Management System per Exhibition"
+    - "Exhibition-based POS System"
+    - "Multi-Payment Sales API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
