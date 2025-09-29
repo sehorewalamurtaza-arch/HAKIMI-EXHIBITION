@@ -133,26 +133,102 @@ class POSAPITester:
             print(f"❌ Inventory API error: {str(e)}")
             return False, None
     
+    def test_exhibition_creation_api(self):
+        """Test POST /exhibitions - test exhibition creation with JSON payload"""
+        print(f"\n🏛️ Testing Exhibition Creation API...")
+        
+        # Sample exhibition data as specified in review request
+        exhibition_data = {
+            "name": "Dubai Perfume Festival 2024",
+            "location": "Dubai World Trade Centre",
+            "start_date": "2024-12-01T09:00:00",
+            "end_date": "2024-12-05T18:00:00",
+            "description": "Premium perfume and attar exhibition"
+        }
+        
+        try:
+            response = requests.post(f"{self.base_url}/exhibitions", json=exhibition_data, headers=self.headers)
+            print(f"Exhibition Creation API Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Exhibition Creation API working")
+                print(f"   Exhibition ID: {data['id']}")
+                print(f"   Name: {data['name']}")
+                print(f"   Location: {data['location']}")
+                print(f"   Status: {data['status']}")
+                
+                return True, data
+            else:
+                print(f"❌ Exhibition Creation API failed: {response.text}")
+                return False, None
+                
+        except Exception as e:
+            print(f"❌ Exhibition Creation API error: {str(e)}")
+            return False, None
+    
+    def test_sales_by_exhibition_api(self, exhibition_id="1"):
+        """Test GET /sales/exhibition/{exhibition_id} - get sales for specific exhibition"""
+        print(f"\n📊 Testing Sales by Exhibition API for exhibition {exhibition_id}...")
+        
+        try:
+            response = requests.get(f"{self.base_url}/sales/exhibition/{exhibition_id}", headers=self.headers)
+            print(f"Sales by Exhibition API Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Sales by Exhibition API working - Found {len(data)} sales")
+                
+                for sale in data:
+                    print(f"   - Sale {sale.get('sale_number', sale.get('id'))}: ${sale.get('total_amount', 0)} ({sale.get('customer_name', 'No customer')})")
+                
+                return True, data
+            else:
+                print(f"❌ Sales by Exhibition API failed: {response.text}")
+                return False, None
+                
+        except Exception as e:
+            print(f"❌ Sales by Exhibition API error: {str(e)}")
+            return False, None
+    
+    def test_leads_by_exhibition_api(self, exhibition_id="1"):
+        """Test GET /leads/exhibition/{exhibition_id} - get leads for specific exhibition"""
+        print(f"\n👥 Testing Leads by Exhibition API for exhibition {exhibition_id}...")
+        
+        try:
+            response = requests.get(f"{self.base_url}/leads/exhibition/{exhibition_id}", headers=self.headers)
+            print(f"Leads by Exhibition API Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Leads by Exhibition API working - Found {len(data)} leads")
+                
+                for lead in data:
+                    print(f"   - {lead.get('name', 'Unknown')}: {lead.get('phone', 'No phone')} ({lead.get('status', 'No status')})")
+                
+                return True, data
+            else:
+                print(f"❌ Leads by Exhibition API failed: {response.text}")
+                return False, None
+                
+        except Exception as e:
+            print(f"❌ Leads by Exhibition API error: {str(e)}")
+            return False, None
+
     def test_enhanced_sales_api(self, exhibition_id="1"):
         """Test POST /sales/enhanced - test multi-payment sales functionality"""
         print(f"\n💰 Testing Enhanced Sales API...")
         
-        # Sample sale data with multi-payment
+        # Sample sale data with multi-payment as specified in review request
         sale_data = {
             "exhibition_id": exhibition_id,
-            "customer_name": "Ahmed Al-Rashid",
+            "customer_name": "Ahmed Hassan",
             "customer_phone": "+971501234567",
-            "customer_email": "ahmed@example.com",
             "items": [
                 {
                     "product_id": "1",
                     "quantity": 2,
                     "price": 150.0
-                },
-                {
-                    "product_id": "2", 
-                    "quantity": 1,
-                    "price": 85.0
                 }
             ],
             "payments": [
@@ -162,7 +238,7 @@ class POSAPITester:
                 },
                 {
                     "type": "card",
-                    "amount": 185.0
+                    "amount": 115.75
                 }
             ]
         }
