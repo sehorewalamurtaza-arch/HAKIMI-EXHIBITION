@@ -627,16 +627,14 @@ const ComingSoon = ({ title, icon: Icon }) => (
 );
 
 export default function App() {
-  const { user } = useAuth();
-  
   return (
     <AuthProvider>
       <BrowserRouter>
         <div className="App font-light">
           <Toaster position="top-center" />
           <Routes>
-            <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
-            <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+            <Route path="/login" element={<LoginRedirectWrapper />} />
+            <Route path="/" element={<LoginRedirectWrapper />} />
             <Route path="/*" element={<AppRoutes />} />
           </Routes>
         </div>
@@ -644,3 +642,22 @@ export default function App() {
     </AuthProvider>
   );
 }
+
+// Login redirect wrapper
+const LoginRedirectWrapper = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-400 text-lg font-light">Loading...</div>
+      </div>
+    );
+  }
+  
+  if (user) {
+    return <Navigate to="/dashboard" />;
+  }
+  
+  return <LoginPage />;
+};
