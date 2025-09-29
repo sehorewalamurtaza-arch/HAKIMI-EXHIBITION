@@ -567,7 +567,7 @@ const UsersPage = () => {
                 {users.map((u) => (
                   <TableRow key={u.id} className="border-gray-100">
                     <TableCell className="font-medium">{u.full_name}</TableCell>
-                    <TableCell className="text-gray-600 font-light">{u.email}</TableCell>
+                    <TableCell className="text-gray-600 font-light">{u.username}</TableCell>
                     <TableCell>
                       <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="font-light">
                         {u.role}
