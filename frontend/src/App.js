@@ -9,7 +9,7 @@ import Dashboard from './components/Dashboard';
 import Products from './components/Products';
 import Categories from './components/Categories';
 import Exhibitions from './components/Exhibitions';
-import EnhancedPOS from './components/EnhancedPOS';
+import OriginalPOS from './components/OriginalPOS';
 import Leads from './components/Leads';
 import Reports from './components/Reports';
 import ExpenseManager from './components/ExpenseManager';
