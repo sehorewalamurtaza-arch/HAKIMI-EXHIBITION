@@ -644,6 +644,12 @@ async def get_order(order_id: str, current_user: User = Depends(get_current_user
     
     return OrderResponse(**order)
 
+# User Management Routes (Admin only)
+@api_router.get("/users", response_model=List[UserResponse])
+async def get_all_users(current_user: User = Depends(get_admin_user)):
+    users = await db.users.find().to_list(1000)
+    return [UserResponse(**user) for user in users]
+
 # Analytics Routes
 @api_router.get("/analytics/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
