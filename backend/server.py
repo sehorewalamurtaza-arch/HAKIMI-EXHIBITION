@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
 from jose import JWTError, jwt
 import uuid
 import os
