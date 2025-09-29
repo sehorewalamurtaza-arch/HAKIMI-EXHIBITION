@@ -446,7 +446,7 @@ const UsersPage = () => {
     try {
       await axios.post(`${API}/auth/register`, newUser);
       toast.success('User created successfully!');
-      setNewUser({ full_name: '', email: '', role: 'cashier', password: '' });
+      setNewUser({ full_name: '', username: '', role: 'cashier', password: '' });
       setShowAddUser(false);
       fetchUsers();
     } catch (error) {
