@@ -714,6 +714,125 @@ const OriginalPOS = () => {
           </button>
         </div>
       </div>
+      </div>
+
+      {/* Edit Order Modal */}
+      {showEditModal && editingOrder && (
+        <div className="modal-overlay">
+          <div className="modal-content max-w-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Edit Order</h2>
+              <button
+                onClick={cancelEditOrder}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Order Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Sale Number
+                  </label>
+                  <input
+                    type="text"
+                    value={editingOrder.sale_number}
+                    onChange={(e) => setEditingOrder({...editingOrder, sale_number: e.target.value})}
+                    className="form-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Customer Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editingOrder.customer_name || ''}
+                    onChange={(e) => setEditingOrder({...editingOrder, customer_name: e.target.value})}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Order Items</h3>
+                <div className="space-y-3">
+                  {editingOrder.items.map((item, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={item.product_name}
+                          onChange={(e) => updateEditingOrderItem(index, 'product_name', e.target.value)}
+                          className="form-input text-sm"
+                          placeholder="Product name"
+                        />
+                      </div>
+                      <div className="w-20">
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateEditingOrderItem(index, 'quantity', e.target.value)}
+                          className="form-input text-sm"
+                          min="1"
+                          placeholder="Qty"
+                        />
+                      </div>
+                      <div className="w-24">
+                        <input
+                          type="number"
+                          value={item.price}
+                          onChange={(e) => updateEditingOrderItem(index, 'price', e.target.value)}
+                          className="form-input text-sm"
+                          min="0"
+                          step="0.01"
+                          placeholder="Price"
+                        />
+                      </div>
+                      <div className="w-24 text-right">
+                        <span className="font-semibold text-green-600">
+                          {formatCurrency(item.quantity * item.price)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between text-xl font-bold">
+                  <span>Total:</span>
+                  <span className="text-green-600">{formatCurrency(editingOrder.total_amount)}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end space-x-4 pt-4">
+                <button
+                  onClick={cancelEditOrder}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEditedOrder}
+                  disabled={isProcessing}
+                  className="btn-primary"
+                >
+                  {isProcessing ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
