@@ -168,29 +168,66 @@ class RoleBasedAccessTester:
         
         return results
     
-    def test_categories_api(self):
-        """Test GET /categories - should return sample product categories"""
-        print("\n📂 Testing Categories API...")
+    def create_test_users_with_limited_permissions(self):
+        """Create test users with specific limited permissions"""
+        print("\n👤 PHASE 3: Creating Test Users with Limited Permissions...")
         
-        try:
-            response = requests.get(f"{self.base_url}/categories", headers=self.headers)
-            print(f"Categories API Status: {response.status_code}")
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Categories API working - Found {len(data)} categories")
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.super_admin_token}"
+        }
+        
+        test_users = [
+            {
+                "username": "pos_only_user",
+                "full_name": "POS Only User",
+                "password": "pos123",
+                "role": "cashier",
+                "permissions": ["pos"]
+            },
+            {
+                "username": "inventory_user",
+                "full_name": "Inventory Manager",
+                "password": "inv123",
+                "role": "inventory",
+                "permissions": ["products", "categories"]
+            },
+            {
+                "username": "limited_admin",
+                "full_name": "Limited Admin",
+                "password": "admin123",
+                "role": "admin",
+                "permissions": ["dashboard", "pos", "products", "reports"]
+            }
+        ]
+        
+        created_users = []
+        
+        for user_data in test_users:
+            try:
+                response = requests.post(f"{self.base_url}/users", json=user_data, headers=headers)
+                print(f"Creating {user_data['username']}: Status {response.status_code}")
                 
-                for category in data:
-                    print(f"   - {category['name']}: {category.get('description', 'No description')}")
+                if response.status_code == 200:
+                    user = response.json()
+                    print(f"✅ Created {user['username']} with permissions: {user['permissions']}")
                     
-                return True, data
-            else:
-                print(f"❌ Categories API failed: {response.text}")
-                return False, None
-                
-        except Exception as e:
-            print(f"❌ Categories API error: {str(e)}")
-            return False, None
+                    # Store for later testing
+                    self.test_user_tokens[user_data['username']] = {
+                        "username": user_data['username'],
+                        "password": user_data['password'],
+                        "permissions": user_data['permissions'],
+                        "user_id": user['id']
+                    }
+                    self.created_test_users.append(user['id'])
+                    created_users.append(user)
+                else:
+                    print(f"❌ Failed to create {user_data['username']}: {response.text}")
+                    
+            except Exception as e:
+                print(f"❌ Error creating {user_data['username']}: {str(e)}")
+        
+        return created_users
     
     def test_inventory_api(self, exhibition_id="1"):
         """Test GET /inventory/exhibition/{id} - should return sample inventory items"""
