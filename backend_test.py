@@ -75,37 +75,98 @@ class RoleBasedAccessTester:
             print(f"❌ Error testing old credentials: {str(e)}")
             return False
     
-    def test_exhibitions_api(self):
-        """Test GET /exhibitions - should return sample active exhibitions"""
-        print("\n🏛️ Testing Exhibitions API...")
+    def test_user_management_apis(self):
+        """Test User Management APIs - Super Admin Only"""
+        print("\n👥 PHASE 2: Testing User Management APIs...")
         
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.super_admin_token}"
+        }
+        
+        results = {
+            "get_users": False,
+            "create_user": False,
+            "update_permissions": False,
+            "delete_user": False
+        }
+        
+        # Test GET /users
+        print("\n📋 Testing GET /users (Super Admin only)...")
         try:
-            response = requests.get(f"{self.base_url}/exhibitions", headers=self.headers)
-            print(f"Exhibitions API Status: {response.status_code}")
+            response = requests.get(f"{self.base_url}/users", headers=headers)
+            print(f"GET /users Status: {response.status_code}")
             
             if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Exhibitions API working - Found {len(data)} exhibitions")
-                
-                for exhibition in data:
-                    print(f"   - {exhibition['name']} ({exhibition['status']}) at {exhibition['location']}")
-                    
-                # Check if we have active exhibitions
-                active_exhibitions = [ex for ex in data if ex['status'] == 'active']
-                if active_exhibitions:
-                    print(f"✅ Found {len(active_exhibitions)} active exhibitions")
-                    return True, data
-                else:
-                    print("⚠️ No active exhibitions found")
-                    return True, data
-                    
+                users = response.json()
+                print(f"✅ GET /users working - Found {len(users)} users")
+                for user in users:
+                    print(f"   - {user['username']} ({user['role']}) - Permissions: {user.get('permissions', [])}")
+                results["get_users"] = True
             else:
-                print(f"❌ Exhibitions API failed: {response.text}")
-                return False, None
+                print(f"❌ GET /users failed: {response.text}")
                 
         except Exception as e:
-            print(f"❌ Exhibitions API error: {str(e)}")
-            return False, None
+            print(f"❌ GET /users error: {str(e)}")
+        
+        # Test POST /users - Create new user
+        print("\n➕ Testing POST /users (Create User)...")
+        test_user_data = {
+            "username": "cashier1",
+            "full_name": "Cashier User",
+            "password": "test123",
+            "role": "cashier",
+            "permissions": ["pos", "dashboard"]
+        }
+        
+        try:
+            response = requests.post(f"{self.base_url}/users", json=test_user_data, headers=headers)
+            print(f"POST /users Status: {response.status_code}")
+            
+            if response.status_code == 200:
+                user = response.json()
+                print(f"✅ POST /users working - Created user: {user['username']}")
+                print(f"   Role: {user['role']}, Permissions: {user['permissions']}")
+                self.created_test_users.append(user['id'])
+                results["create_user"] = True
+                
+                # Store user credentials for later testing
+                self.test_user_tokens["cashier1"] = {
+                    "username": "cashier1",
+                    "password": "test123",
+                    "permissions": ["pos", "dashboard"],
+                    "user_id": user['id']
+                }
+            else:
+                print(f"❌ POST /users failed: {response.text}")
+                
+        except Exception as e:
+            print(f"❌ POST /users error: {str(e)}")
+        
+        # Test PUT /users/{user_id}/permissions - Update permissions
+        if self.created_test_users:
+            print("\n✏️ Testing PUT /users/{user_id}/permissions...")
+            user_id = self.created_test_users[0]
+            new_permissions = ["pos", "dashboard", "products"]
+            
+            try:
+                response = requests.put(
+                    f"{self.base_url}/users/{user_id}/permissions",
+                    json=new_permissions,
+                    headers=headers
+                )
+                print(f"PUT /users permissions Status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    print("✅ PUT /users permissions working - Updated user permissions")
+                    results["update_permissions"] = True
+                else:
+                    print(f"❌ PUT /users permissions failed: {response.text}")
+                    
+            except Exception as e:
+                print(f"❌ PUT /users permissions error: {str(e)}")
+        
+        return results
     
     def test_categories_api(self):
         """Test GET /categories - should return sample product categories"""
