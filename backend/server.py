@@ -1083,8 +1083,13 @@ async def create_super_admin_user():
     existing_admin = await db.users.find_one({"username": "Murtaza Taher"})
     
     if not existing_admin:
+        # Get admin password from environment
+        admin_password = os.environ.get('SUPER_ADMIN_PASSWORD')
+        if not admin_password:
+            raise ValueError("SUPER_ADMIN_PASSWORD environment variable must be set for initial setup")
+        
         # Create the main super admin user
-        password_hash = get_password_hash("Hakimi@786")
+        password_hash = get_password_hash(admin_password)
         
         super_admin = User(
             username="Murtaza Taher",
