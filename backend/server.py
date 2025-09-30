@@ -1033,7 +1033,7 @@ async def create_super_admin_user():
     
     if not existing_admin:
         # Create the main super admin user
-        password_hash = hashlib.sha256("Hakimi@786".encode()).hexdigest()
+        password_hash = get_password_hash("Hakimi@786")
         
         super_admin = User(
             username="Murtaza Taher",
