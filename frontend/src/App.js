@@ -96,6 +96,7 @@ function App() {
                     <Route path="/leads" element={<Leads />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/day-end-close" element={<DayEndClose />} />
+                    <Route path="/exhibition-closure" element={<ExhibitionClosure />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
