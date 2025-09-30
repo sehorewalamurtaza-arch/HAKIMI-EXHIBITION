@@ -101,12 +101,6 @@ const Login = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-          
-          <div className="text-center mt-6">
-            <div className="text-sm text-gray-600">
-              Default Login: <strong>admin</strong> / <strong>admin123</strong>
-            </div>
-          </div>
         </div>
       </div>
     </div>
