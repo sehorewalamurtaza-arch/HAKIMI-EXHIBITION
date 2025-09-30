@@ -82,6 +82,7 @@ class UserBase(BaseModel):
     full_name: str
     role: UserRole = UserRole.CASHIER
     phone: Optional[str] = None
+    permissions: List[Permission] = []
 
 class UserCreate(UserBase):
     password: str
