@@ -155,6 +155,31 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </div>
+
+        {/* User Info Section */}
+        <div className="mt-8 pt-6 border-t border-amber-200">
+          <div className="px-4 py-2">
+            <p className="text-sm font-semibold text-gray-700">{user?.full_name}</p>
+            <p className="text-xs text-gray-500">@{user?.username}</p>
+            <div className="mt-2">
+              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                user?.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+                user?.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+                user?.role === 'cashier' ? 'bg-green-100 text-green-800' :
+                'bg-yellow-100 text-yellow-800'
+              }`}>
+                {user?.role === 'super_admin' ? 'Super Admin' :
+                 user?.role === 'admin' ? 'Admin' :
+                 user?.role === 'cashier' ? 'Cashier' : 'Inventory'}
+              </span>
+            </div>
+            {user?.permissions && (
+              <p className="text-xs text-gray-500 mt-1">
+                {user.permissions.length} permission{user.permissions.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+        </div>
       </nav>
     </aside>
   );
