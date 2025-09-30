@@ -98,6 +98,7 @@ function App() {
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/day-end-close" element={<DayEndClose />} />
                     <Route path="/exhibition-closure" element={<ExhibitionClosure />} />
+                    <Route path="/user-management" element={<UserManagement />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
