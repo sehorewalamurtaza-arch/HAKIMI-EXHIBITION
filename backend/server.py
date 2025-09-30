@@ -25,14 +25,19 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Security configuration
-SECRET_KEY = os.environ.get('SECRET_KEY', 'badshah-hakimi-pos-system-secret-key-2024')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable must be set for production security")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 hours for POS system
 
 # Simple password hashing
 def get_password_hash(password: str) -> str:
-    """Hash password using SHA-256 with salt for security"""
-    salt = "badshah_hakimi_pos_salt_2024"
+    """Hash password using SHA-256 with configurable salt for security"""
+    salt = os.environ.get('PASSWORD_SALT')
+    if not salt:
+        raise ValueError("PASSWORD_SALT environment variable must be set for production security")
     return hashlib.sha256(f"{password}{salt}".encode()).hexdigest()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
