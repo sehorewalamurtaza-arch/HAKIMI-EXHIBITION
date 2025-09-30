@@ -423,18 +423,24 @@ class RoleBasedAccessTester:
         
         try:
             response = requests.get(f"{self.base_url}/users/nonexistent-user-id", headers=headers)
+            print(f"404 test response: {response.status_code}")
             if response.status_code == 404:
                 print("✅ 404 Not Found response working correctly")
                 results["not_found_404"] = True
+            else:
+                print(f"❌ Expected 404, got {response.status_code}: {response.text}")
         except Exception as e:
             print(f"❌ Error testing 404 response: {str(e)}")
         
         # Test 401 Unauthorized (no token)
         try:
             response = requests.get(f"{self.base_url}/users")
+            print(f"401 test response: {response.status_code}")
             if response.status_code == 401:
                 print("✅ 401 Unauthorized response working correctly")
                 results["unauthorized_401"] = True
+            else:
+                print(f"❌ Expected 401, got {response.status_code}: {response.text}")
         except Exception as e:
             print(f"❌ Error testing 401 response: {str(e)}")
         
