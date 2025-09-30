@@ -618,12 +618,16 @@ class RoleBasedAccessTester:
         return passed_tests == total_tests
 
 if __name__ == "__main__":
-    tester = POSAPITester()
-    results = tester.run_all_tests()
+    tester = RoleBasedAccessTester()
+    results = tester.run_comprehensive_rbac_tests()
     
-    # Exit with error code if any tests failed
-    if not all(results.values()):
-        sys.exit(1)
-    else:
-        print("\n🎉 All tests passed!")
+    # Print comprehensive summary
+    all_passed = tester.print_test_summary(results)
+    
+    # Exit with appropriate code
+    if all_passed:
+        print("\n🎉 All role-based access control tests passed!")
         sys.exit(0)
+    else:
+        print("\n❌ Some tests failed - check the results above")
+        sys.exit(1)
