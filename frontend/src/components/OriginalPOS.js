@@ -18,6 +18,13 @@ const OriginalPOS = () => {
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Order management state
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [showOrderHistory, setShowOrderHistory] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [lastCompletedSale, setLastCompletedSale] = useState(null);
 
   const paymentTypes = ['cash', 'card', 'bank_transfer', 'digital_wallet'];
 
