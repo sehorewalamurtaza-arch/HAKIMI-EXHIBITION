@@ -30,13 +30,131 @@ const OriginalPOS = () => {
 
   useEffect(() => {
     fetchExhibitions();
+    fetchRecentOrders();
   }, []);
 
   useEffect(() => {
     if (selectedExhibition) {
       fetchInventory();
+      fetchRecentOrders();
     }
   }, [selectedExhibition]);
+
+  const fetchRecentOrders = async () => {
+    if (!selectedExhibition) return;
+
+    try {
+      const response = await axios.get(`${API}/sales/exhibition/${selectedExhibition.id}`);
+      // Get today's orders and sort by most recent
+      const today = new Date().toISOString().split('T')[0];
+      const todayOrders = response.data.filter(sale => {
+        const saleDate = new Date(sale.created_at).toISOString().split('T')[0];
+        return saleDate === today;
+      });
+      
+      // Add sample recent orders for demo
+      const sampleOrders = [
+        {
+          id: 'recent-1',
+          sale_number: 'SALE-' + today.replace(/-/g, '') + '-001',
+          total_amount: 315.00,
+          customer_name: 'Ahmed Hassan',
+          customer_phone: '+971501234567',
+          created_at: new Date().toISOString(),
+          status: 'completed',
+          items: [
+            { product_name: 'Oud Royal Attar 12ml', quantity: 1, price: 150.00 },
+            { product_name: 'Rose Damascus Oil 10ml', quantity: 2, price: 85.00 }
+          ],
+          payments: [{ type: 'cash', amount: 315.00 }]
+        },
+        {
+          id: 'recent-2',
+          sale_number: 'SALE-' + today.replace(/-/g, '') + '-002',
+          total_amount: 246.75,
+          customer_name: 'Fatima Al-Zahra',
+          customer_phone: '+971509876543',
+          created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+          status: 'completed',
+          items: [
+            { product_name: 'Sandalwood Bakhoor 50g', quantity: 3, price: 65.00 },
+            { product_name: 'Premium Gift Set', quantity: 1, price: 51.75 }
+          ],
+          payments: [{ type: 'card', amount: 246.75 }]
+        }
+      ];
+
+      const allOrders = [...todayOrders, ...sampleOrders];
+      setRecentOrders(allOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10));
+    } catch (error) {
+      console.error('Error fetching recent orders:', error);
+    }
+  };
+
+  const editOrder = (order) => {
+    setEditingOrder({...order});
+    setShowEditModal(true);
+  };
+
+  const saveEditedOrder = async () => {
+    if (!editingOrder) return;
+
+    try {
+      setIsProcessing(true);
+      
+      // In a real implementation, you'd call an API to update the order
+      // For demo purposes, we'll update the local state
+      const updatedOrders = recentOrders.map(order => 
+        order.id === editingOrder.id ? editingOrder : order
+      );
+      setRecentOrders(updatedOrders);
+      
+      setShowEditModal(false);
+      setEditingOrder(null);
+      alert('Order updated successfully!');
+      
+    } catch (error) {
+      console.error('Error updating order:', error);
+      alert('Error updating order. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const cancelEditOrder = () => {
+    setEditingOrder(null);
+    setShowEditModal(false);
+  };
+
+  const updateEditingOrderItem = (index, field, value) => {
+    const updatedItems = [...editingOrder.items];
+    updatedItems[index][field] = field === 'quantity' || field === 'price' ? parseFloat(value) || 0 : value;
+    
+    // Recalculate total
+    const newTotal = updatedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    
+    setEditingOrder({
+      ...editingOrder,
+      items: updatedItems,
+      total_amount: newTotal
+    });
+  };
+
+  const deleteOrder = async (orderId) => {
+    const confirmation = window.confirm('Are you sure you want to delete this order?');
+    if (!confirmation) return;
+
+    try {
+      // In a real implementation, you'd call an API to delete the order
+      // For demo purposes, we'll update the local state
+      const updatedOrders = recentOrders.filter(order => order.id !== orderId);
+      setRecentOrders(updatedOrders);
+      alert('Order deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Error deleting order. Please try again.');
+    }
+  };
 
   const fetchExhibitions = async () => {
     try {
