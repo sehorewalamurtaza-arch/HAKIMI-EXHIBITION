@@ -166,6 +166,40 @@ class RoleBasedAccessTester:
             except Exception as e:
                 print(f"❌ PUT /users permissions error: {str(e)}")
         
+        # Test DELETE /users/{user_id} - Delete user (but not the one we'll use later)
+        if len(self.created_test_users) > 0:
+            print("\n🗑️ Testing DELETE /users/{user_id}...")
+            # Create a temporary user just for deletion test
+            temp_user_data = {
+                "username": "temp_delete_user",
+                "full_name": "Temporary Delete User",
+                "password": "temp123",
+                "role": "cashier",
+                "permissions": ["pos"]
+            }
+            
+            try:
+                # Create temp user
+                response = requests.post(f"{self.base_url}/users", json=temp_user_data, headers=headers)
+                if response.status_code == 200:
+                    temp_user = response.json()
+                    temp_user_id = temp_user['id']
+                    
+                    # Delete temp user
+                    response = requests.delete(f"{self.base_url}/users/{temp_user_id}", headers=headers)
+                    print(f"DELETE /users Status: {response.status_code}")
+                    
+                    if response.status_code == 200:
+                        print("✅ DELETE /users working - Deleted test user")
+                        results["delete_user"] = True
+                    else:
+                        print(f"❌ DELETE /users failed: {response.text}")
+                else:
+                    print("❌ Could not create temp user for deletion test")
+                    
+            except Exception as e:
+                print(f"❌ DELETE /users error: {str(e)}")
+        
         return results
     
     def create_test_users_with_limited_permissions(self):
