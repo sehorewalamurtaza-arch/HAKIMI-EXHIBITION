@@ -1028,6 +1028,32 @@ async def update_user_permissions(
     
     return {"success": True, "message": "Permissions updated successfully"}
 
+@api_router.get("/users/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only Super Admin can access user details")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Clean up user data for response
+    user_data = {
+        'id': user.get('id', str(user.get('_id', ''))),
+        'username': user.get('username'),
+        'full_name': user.get('full_name'),
+        'role': user.get('role'),
+        'phone': user.get('phone'),
+        'permissions': user.get('permissions', []),
+        'created_at': user.get('created_at'),
+        'is_active': user.get('is_active', True)
+    }
+    
+    return UserResponse(**user_data)
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
