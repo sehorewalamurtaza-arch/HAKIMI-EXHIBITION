@@ -236,26 +236,18 @@
 }
 }
 
+/* Additional Elegant Styles */
 .status-completed {
-  @apply bg-blue-100 text-blue-800;
+  @apply bg-blue-50 text-blue-700 border border-blue-100;
 }
 
-/* Form Styles */
-input, textarea, select {
-  transition: all 0.2s ease;
-}
-
-input:focus, textarea:focus, select:focus {
-  @apply ring-2 ring-amber-500 ring-opacity-50 border-amber-500;
-}
-
-/* Scrollbar */
+/* Elegant Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-gray-50;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -266,14 +258,14 @@ input:focus, textarea:focus, select:focus {
   @apply bg-gray-400;
 }
 
-/* Loading Animation */
+/* Loading States */
 .loading-spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #f59e0b;
+  width: 16px;
+  height: 16px;
+  border: 2px solid hsl(var(--muted));
+  border-top: 2px solid hsl(var(--foreground));
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -281,84 +273,124 @@ input:focus, textarea:focus, select:focus {
   100% { transform: rotate(360deg); }
 }
 
-/* Backdrop Blur Support */
-.backdrop-blur-lg {
-  backdrop-filter: blur(16px);
+/* Modal Styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50;
+  animation: fadeIn 0.2s ease;
 }
 
-.backdrop-blur-sm {
-  backdrop-filter: blur(4px);
+.modal-content {
+  @apply bg-white rounded-3xl p-8 max-w-md w-full max-h-screen overflow-y-auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Gradient Text */
-.gradient-text {
-  @apply bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent;
-}
-
-/* Box Shadows */
-.shadow-elegant {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* Responsive Design */
-@media (max-width: 640px) {
-  .grid-4 {
-    @apply grid-cols-1;
+@keyframes modalSlide {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.95);
   }
-  
-  .grid-2 {
-    @apply grid-cols-1;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-/* Print Styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  .card {
-    @apply bg-white shadow-none border border-gray-300;
-  }
+/* POS Grid Layout */
+.pos-grid {
+  @apply grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-screen;
 }
 
-/* Animation Utils */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
+.pos-products {
+  @apply lg:col-span-2;
 }
 
-.animate-slide-up {
-  animation: slideUp 0.4s ease-out;
+.pos-cart {
+  @apply lg:col-span-1 space-y-6;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Product Grid */
+.product-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
 }
 
-/* Focus Styles */
-.focus-ring {
-  @apply focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 focus:outline-none;
+.product-card {
+  @apply p-4 border border-gray-200/60 rounded-2xl bg-white transition-all duration-300;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+  border-color: hsl(var(--hakimi-gold) / 0.3);
+}
+
+/* Cart Items */
+.cart-item {
+  @apply flex items-center justify-between p-4 bg-gray-50/50 rounded-xl border border-gray-100;
+  backdrop-filter: blur(8px);
 }
 
 /* Table Styles */
-.table {
-  @apply w-full border-collapse bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg;
+.table-container {
+  @apply overflow-hidden rounded-2xl border border-gray-200/60;
+  background: white;
 }
 
-.table th {
-  @apply bg-gray-50/90 px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200;
+table {
+  @apply w-full;
 }
 
-.table td {
-  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-100;
+thead {
+  @apply bg-gray-50/80;
 }
 
-/* Custom Utilities */
-.glass {
-  @apply bg-white/20 backdrop-blur-lg border border-white/20;
+th {
+  @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider;
+  font-family: 'Geist', sans-serif;
+  letter-spacing: 0.05em;
 }
 
-.text-shadow {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+td {
+  @apply px-6 py-4 text-sm text-gray-900 border-t border-gray-100/60;
+}
+
+tr:hover td {
+  @apply bg-gray-50/50;
+}
+
+/* Typography Enhancements */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-primary {
+  color: hsl(var(--foreground));
+}
+
+.text-muted {
+  color: hsl(var(--muted-foreground));
+}
+
+.text-gold {
+  color: hsl(var(--hakimi-gold-dark));
+}
+
+/* Spacing Utilities */
+.space-y-8 > * + * {
+  margin-top: 2rem;
+}
+
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+/* Border Utilities */
+.border-elegant {
+  border: 1px solid hsl(var(--border));
+}
+
+/* Focus States */
+.focus-ring:focus {
+  @apply outline-none ring-2 ring-black/10 ring-offset-2;
 }
