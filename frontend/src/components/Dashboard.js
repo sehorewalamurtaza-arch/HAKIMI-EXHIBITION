@@ -170,20 +170,14 @@ const Dashboard = () => {
   const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'AED');
 
   const formatCurrency = (amount) => {
-    const currencyMap = {
-      'AED': { locale: 'ar-AE', currency: 'AED' },
-      'QAR': { locale: 'ar-QA', currency: 'QAR' }
-    };
-
-    const config = currencyMap[currency] || currencyMap['AED'];
-    return new Intl.NumberFormat(config.locale, {
+    return new Intl.NumberFormat('ar-AE', {
       style: 'currency',
-      currency: config.currency
+      currency: 'AED'
     }).format(amount);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-AE', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -193,29 +187,137 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" data-testid="dashboard-loading">
+      <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
       </div>
     );
   }
 
+  const currentStats = viewMode === 'today' 
+    ? { sales: stats.todaySales, transactions: stats.todayTransactions, profit: stats.todayGrossProfit }
+    : { sales: stats.periodSales, transactions: stats.periodTransactions, profit: stats.periodGrossProfit };
+
   return (
-    <div className="space-y-6 fade-in" data-testid="dashboard-content">
+    <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome to your exhibition overview</p>
         </div>
-        <button
-          onClick={fetchDashboardData}
-          className="btn-secondary flex items-center"
-          data-testid="refresh-dashboard-button"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh
-        </button>
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={fetchDashboardData}
+            className="btn-secondary flex items-center"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Daily Sales Tracking Section */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-800">Daily Sales Tracking</h2>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setViewMode('today')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'today' ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setViewMode('period')}
+                className={`px-3 py-1 rounded text-sm ${viewMode === 'period' ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+              >
+                Period
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {viewMode === 'today' ? (
+          <div className="flex items-center space-x-4 mb-4">
+            <label className="text-sm font-semibold text-gray-700">Date:</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="form-input text-sm max-w-xs"
+            />
+          </div>
+        ) : (
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-semibold text-gray-700">From:</label>
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange({...dateRange, startDate: e.target.value})}
+                className="form-input text-sm max-w-xs"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-semibold text-gray-700">To:</label>
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange({...dateRange, endDate: e.target.value})}
+                className="form-input text-sm max-w-xs"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Daily/Period Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="summary-card bg-green-50 border-green-200">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-500 rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-semibold text-gray-600">
+                  {viewMode === 'today' ? `Sales (${new Date(selectedDate).toLocaleDateString()})` : 'Period Sales'}
+                </p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(currentStats.sales)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="summary-card bg-blue-50 border-blue-200">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-500 rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-semibold text-gray-600">Transactions</p>
+                <p className="text-2xl font-bold text-blue-600">{currentStats.transactions}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="summary-card bg-amber-50 border-amber-200">
+            <div className="flex items-center">
+              <div className="p-3 bg-amber-500 rounded-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-semibold text-gray-600">Gross Profit (Est.)</p>
+                <p className="text-2xl font-bold text-amber-600">{formatCurrency(currentStats.profit)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
