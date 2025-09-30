@@ -974,7 +974,7 @@ async def create_user_with_permissions(
         raise HTTPException(status_code=400, detail="Username already exists")
     
     # Hash password
-    password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
+    password_hash = get_password_hash(user_data.password)
     
     # Create user
     user = User(
