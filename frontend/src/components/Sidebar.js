@@ -134,53 +134,80 @@ const Sidebar = () => {
   const menuItems = allMenuItems.filter(item => hasPermission(item.permission));
 
   return (
-    <aside className="w-64 bg-white/80 backdrop-filter backdrop-blur-lg border-r border-orange-200/50 min-h-screen slide-in-left">
-      <nav className="p-4">
-        <div className="space-y-2">
+    <aside className="w-64 bg-white/95 backdrop-blur-xl border-r border-gray-200/40 min-h-screen flex flex-col">
+      {/* Logo Section */}
+      <div className="p-6 border-b border-gray-200/40">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">H</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Badshah Hakimi</h2>
+            <p className="text-xs text-gray-500">Exhibition Sales</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4">
+        <div className="space-y-1">
           {menuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                `group flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-                    : 'text-gray-700 hover:bg-amber-50 hover:text-amber-700'
+                    ? 'bg-black text-white shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 }`
               }
               data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
             >
-              {item.icon}
-              <span className="font-semibold">{item.name}</span>
+              <span className={`${({ isActive }) => isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
+                {item.icon}
+              </span>
+              <span className="font-medium text-sm">{item.name}</span>
             </NavLink>
           ))}
         </div>
+      </nav>
 
-        {/* User Info Section */}
-        <div className="mt-8 pt-6 border-t border-amber-200">
-          <div className="px-4 py-2">
-            <p className="text-sm font-semibold text-gray-700">{user?.full_name}</p>
-            <p className="text-xs text-gray-500">@{user?.username}</p>
-            <div className="mt-2">
-              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                user?.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                user?.role === 'admin' ? 'bg-blue-100 text-blue-800' :
-                user?.role === 'cashier' ? 'bg-green-100 text-green-800' :
-                'bg-yellow-100 text-yellow-800'
+      {/* User Profile Section */}
+      <div className="p-4 border-t border-gray-200/40">
+        <div className="flex items-center space-x-3 p-3 bg-gray-50/50 rounded-xl">
+          <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold text-sm">
+              {user?.full_name?.charAt(0) || 'U'}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.full_name || 'User'}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              @{user?.username || 'unknown'}
+            </p>
+            <div className="flex items-center space-x-2 mt-1">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                user?.role === 'super_admin' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
+                user?.role === 'admin' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                user?.role === 'cashier' ? 'bg-green-50 text-green-700 border border-green-100' :
+                'bg-amber-50 text-amber-700 border border-amber-100'
               }`}>
                 {user?.role === 'super_admin' ? 'Super Admin' :
                  user?.role === 'admin' ? 'Admin' :
                  user?.role === 'cashier' ? 'Cashier' : 'Inventory'}
               </span>
+              {user?.permissions && (
+                <span className="text-xs text-gray-400">
+                  {user.permissions.length} perms
+                </span>
+              )}
             </div>
-            {user?.permissions && (
-              <p className="text-xs text-gray-500 mt-1">
-                {user.permissions.length} permission{user.permissions.length !== 1 ? 's' : ''}
-              </p>
-            )}
           </div>
         </div>
-      </nav>
+      </div>
     </aside>
   );
 };
