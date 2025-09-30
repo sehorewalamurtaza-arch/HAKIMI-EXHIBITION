@@ -589,7 +589,7 @@ class RoleBasedAccessTester:
         error_responses = results['error_responses']
         print(f"   403 Forbidden Responses: {'✅ PASS' if error_responses.get('forbidden_403', False) else '❌ FAIL'}")
         print(f"   404 Not Found Responses: {'✅ PASS' if error_responses.get('not_found_404', False) else '❌ FAIL'}")
-        print(f"   401 Unauthorized Responses: {'✅ PASS' if error_responses.get('unauthorized_401', False) else '❌ FAIL'}")
+        print(f"   401/403 Unauthorized Responses: {'✅ PASS' if error_responses.get('unauthorized_401', False) else '❌ FAIL'}")
         
         # Security Features
         print("\n🛡️ SECURITY FEATURES")
