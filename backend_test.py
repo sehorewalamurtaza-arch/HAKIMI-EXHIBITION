@@ -599,6 +599,7 @@ class RoleBasedAccessTester:
         print(f"   GET /users: {'✅ PASS' if user_mgmt.get('get_users', False) else '❌ FAIL'}")
         print(f"   POST /users: {'✅ PASS' if user_mgmt.get('create_user', False) else '❌ FAIL'}")
         print(f"   PUT /users/permissions: {'✅ PASS' if user_mgmt.get('update_permissions', False) else '❌ FAIL'}")
+        print(f"   DELETE /users: {'✅ PASS' if user_mgmt.get('delete_user', False) else '❌ FAIL'}")
         
         # Phase 3 Results
         print("\n👤 PHASE 3: Test User Creation")
