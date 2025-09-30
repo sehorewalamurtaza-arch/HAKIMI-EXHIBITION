@@ -293,7 +293,31 @@ const OriginalPOS = () => {
         }))
       };
 
-      await axios.post(`${API}/sales/enhanced`, saleData);
+      const response = await axios.post(`${API}/sales/enhanced`, saleData);
+
+      // Create sale record for local order management
+      const newSale = {
+        id: 'local-' + Date.now(),
+        sale_number: response.data.sale_number || `SALE-${Date.now()}`,
+        total_amount: getTotalAmount(),
+        customer_name: customer.name || 'Walk-in Customer',
+        customer_phone: customer.phone || '',
+        created_at: new Date().toISOString(),
+        status: 'completed',
+        items: cart.map(item => ({
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        payments: payments.map(payment => ({
+          type: payment.type,
+          amount: parseFloat(payment.amount) || 0
+        }))
+      };
+
+      // Add to recent orders
+      setRecentOrders([newSale, ...recentOrders.slice(0, 9)]);
+      setLastCompletedSale(newSale);
 
       // Reset form
       setCart([]);
