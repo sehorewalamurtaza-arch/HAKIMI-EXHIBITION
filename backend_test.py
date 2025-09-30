@@ -388,29 +388,57 @@ class RoleBasedAccessTester:
         
         return results
     
-    def test_sales_by_exhibition_api(self, exhibition_id="1"):
-        """Test GET /sales/exhibition/{exhibition_id} - get sales for specific exhibition"""
-        print(f"\n📊 Testing Sales by Exhibition API for exhibition {exhibition_id}...")
+    def test_error_responses(self):
+        """Test that proper error responses are returned"""
+        print("\n⚠️ Testing Error Response Handling...")
+        
+        results = {
+            "forbidden_403": False,
+            "not_found_404": False,
+            "unauthorized_401": False
+        }
+        
+        # Test 403 Forbidden
+        if "pos_only_user" in self.test_user_tokens:
+            token, user = self.authenticate_test_user("pos_only_user", "pos123")
+            if token:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {token}"
+                }
+                
+                try:
+                    response = requests.get(f"{self.base_url}/users", headers=headers)
+                    if response.status_code == 403:
+                        print("✅ 403 Forbidden response working correctly")
+                        results["forbidden_403"] = True
+                except Exception as e:
+                    print(f"❌ Error testing 403 response: {str(e)}")
+        
+        # Test 404 Not Found
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.super_admin_token}"
+        }
         
         try:
-            response = requests.get(f"{self.base_url}/sales/exhibition/{exhibition_id}", headers=self.headers)
-            print(f"Sales by Exhibition API Status: {response.status_code}")
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Sales by Exhibition API working - Found {len(data)} sales")
-                
-                for sale in data:
-                    print(f"   - Sale {sale.get('sale_number', sale.get('id'))}: ${sale.get('total_amount', 0)} ({sale.get('customer_name', 'No customer')})")
-                
-                return True, data
-            else:
-                print(f"❌ Sales by Exhibition API failed: {response.text}")
-                return False, None
-                
+            response = requests.get(f"{self.base_url}/users/nonexistent-user-id", headers=headers)
+            if response.status_code == 404:
+                print("✅ 404 Not Found response working correctly")
+                results["not_found_404"] = True
         except Exception as e:
-            print(f"❌ Sales by Exhibition API error: {str(e)}")
-            return False, None
+            print(f"❌ Error testing 404 response: {str(e)}")
+        
+        # Test 401 Unauthorized (no token)
+        try:
+            response = requests.get(f"{self.base_url}/users")
+            if response.status_code == 401:
+                print("✅ 401 Unauthorized response working correctly")
+                results["unauthorized_401"] = True
+        except Exception as e:
+            print(f"❌ Error testing 401 response: {str(e)}")
+        
+        return results
     
     def test_leads_by_exhibition_api(self, exhibition_id="1"):
         """Test GET /leads/exhibition/{exhibition_id} - get leads for specific exhibition"""
