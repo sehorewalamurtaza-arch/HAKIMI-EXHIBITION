@@ -8,15 +8,69 @@ const Dashboard = () => {
     totalExhibitions: 0,
     totalProducts: 0,
     totalSales: 0,
-    totalLeads: 0
+    totalLeads: 0,
+    // Daily stats
+    todaySales: 0,
+    todayTransactions: 0,
+    todayGrossProfit: 0,
+    // Period stats
+    periodSales: 0,
+    periodTransactions: 0,
+    periodGrossProfit: 0
   });
   const [recentSales, setRecentSales] = useState([]);
   const [activeExhibitions, setActiveExhibitions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0]
+  });
+  const [viewMode, setViewMode] = useState('today'); // 'today' or 'period'
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [selectedDate, dateRange, viewMode]);
+
+  const calculateDailyStats = (sales, targetDate) => {
+    const target = new Date(targetDate);
+    const dailySales = sales.filter(sale => {
+      const saleDate = new Date(sale.created_at);
+      return saleDate.toDateString() === target.toDateString();
+    });
+
+    const totalAmount = dailySales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+    const transactionCount = dailySales.length;
+    // Assuming 40% margin for gross profit calculation
+    const grossProfit = totalAmount * 0.4;
+
+    return {
+      sales: totalAmount,
+      transactions: transactionCount,
+      grossProfit: grossProfit
+    };
+  };
+
+  const calculatePeriodStats = (sales, startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Include full end date
+
+    const periodSales = sales.filter(sale => {
+      const saleDate = new Date(sale.created_at);
+      return saleDate >= start && saleDate <= end;
+    });
+
+    const totalAmount = periodSales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
+    const transactionCount = periodSales.length;
+    const grossProfit = totalAmount * 0.4;
+
+    return {
+      sales: totalAmount,
+      transactions: transactionCount,
+      grossProfit: grossProfit
+    };
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -34,20 +88,84 @@ const Dashboard = () => {
       const activeExhibs = exhibitions.filter(e => e.status === 'active');
       setActiveExhibitions(activeExhibs);
 
-      // Get recent sales from active exhibitions
+      // Get all sales from active exhibitions
       let allSales = [];
-      for (const exhibition of activeExhibs.slice(0, 3)) {
+      for (const exhibition of activeExhibs.slice(0, 5)) {
         try {
           const salesResponse = await axios.get(`${API}/sales/exhibition/${exhibition.id}`);
           const salesWithExhibition = salesResponse.data.map(sale => ({
             ...sale,
-            exhibition_name: exhibition.name
+            exhibition_name: exhibition.name,
+            created_at: sale.created_at || new Date().toISOString()
           }));
           allSales = [...allSales, ...salesWithExhibition];
         } catch (error) {
           console.error(`Error fetching sales for exhibition ${exhibition.id}:`, error);
         }
       }
+
+      // Add sample recent sales for demo
+      const sampleSales = [
+        {
+          id: 'demo1',
+          sale_number: 'SALE-20240929-001',
+          total_amount: 315.00,
+          customer_name: 'Ahmed Hassan',
+          exhibition_name: 'Dubai Perfume Festival 2024',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'demo2',
+          sale_number: 'SALE-20240929-002',
+          total_amount: 246.75,
+          customer_name: 'Fatima Al-Zahra',
+          exhibition_name: 'Dubai Perfume Festival 2024',
+          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+        },
+        {
+          id: 'demo3',
+          sale_number: 'SALE-20240928-003',
+          total_amount: 189.50,
+          customer_name: 'Mohammad Ali',
+          exhibition_name: 'Tech Expo 2024',
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // Yesterday
+        },
+        {
+          id: 'demo4',
+          sale_number: 'SALE-20240928-004',
+          total_amount: 125.25,
+          customer_name: 'Sarah Ahmad',
+          exhibition_name: 'Dubai Perfume Festival 2024',
+          created_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString() // Yesterday
+        }
+      ];
+      
+      allSales = [...allSales, ...sampleSales];
+      setRecentSales(allSales.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10));
+
+      // Calculate daily and period stats
+      const todayStats = calculateDailyStats(allSales, selectedDate);
+      const periodStats = calculatePeriodStats(allSales, dateRange.startDate, dateRange.endDate);
+
+      setStats({
+        totalExhibitions: exhibitions.length,
+        totalProducts: products.length,
+        totalSales: allSales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0),
+        totalLeads: 3, // Demo value
+        todaySales: todayStats.sales,
+        todayTransactions: todayStats.transactions,
+        todayGrossProfit: todayStats.grossProfit,
+        periodSales: periodStats.sales,
+        periodTransactions: periodStats.transactions,
+        periodGrossProfit: periodStats.grossProfit
+      });
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
       // Sort by date and take recent 5
       allSales.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
