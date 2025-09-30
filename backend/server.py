@@ -428,12 +428,6 @@ async def login_user(login_data: LoginData):
 async def get_current_user_profile(current_user: User = Depends(get_current_user)):
     return UserResponse(**current_user.dict())
 
-# User Management Routes (Admin only)
-@api_router.get("/users", response_model=List[UserResponse])
-async def get_all_users(current_user: User = Depends(get_admin_user)):
-    users = await db.users.find().to_list(1000)
-    return [UserResponse(**user) for user in users]
-
 # Product Routes
 @api_router.post("/products", response_model=ProductResponse)
 async def create_product(
