@@ -45,8 +45,23 @@ security = HTTPBearer()
 app = FastAPI(title="Badshah-Hakimi POS System", version="1.0.0")
 api_router = APIRouter(prefix="/api")
 
-# Enums
+# Permission system
+class Permission(str, Enum):
+    DASHBOARD = "dashboard"
+    PRODUCTS = "products"
+    CATEGORIES = "categories"
+    EXHIBITIONS = "exhibitions"
+    POS = "pos"
+    EXPENSES = "expenses"
+    LEADS = "leads"
+    REPORTS = "reports"
+    DAY_END_CLOSE = "day_end_close"
+    EXHIBITION_CLOSURE = "exhibition_closure"
+    USER_MANAGEMENT = "user_management"
+
+# User roles and enums
 class UserRole(str, Enum):
+    SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
     CASHIER = "cashier"
     INVENTORY = "inventory"
