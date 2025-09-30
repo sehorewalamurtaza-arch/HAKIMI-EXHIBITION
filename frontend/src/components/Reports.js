@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../App';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import './styles.css';
 
 const Reports = () => {
