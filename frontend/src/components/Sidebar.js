@@ -119,6 +119,20 @@ const Sidebar = () => {
     }
   ];
 
+  // Check if user has permission to access a menu item
+  const hasPermission = (permission) => {
+    // Super Admin has all permissions
+    if (user?.role === 'super_admin') {
+      return true;
+    }
+    
+    // Check if user has the specific permission
+    return user?.permissions && user.permissions.includes(permission);
+  };
+
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item => hasPermission(item.permission));
+
   return (
     <aside className="w-64 bg-white/80 backdrop-filter backdrop-blur-lg border-r border-orange-200/50 min-h-screen slide-in-left">
       <nav className="p-4">
