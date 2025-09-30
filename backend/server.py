@@ -958,7 +958,27 @@ async def get_all_users(current_user: User = Depends(get_admin_user)):
         raise HTTPException(status_code=403, detail="Only Super Admin can access user management")
     
     users = await db.users.find().to_list(100)
-    return [UserResponse(**user) for user in users]
+    valid_users = []
+    
+    for user in users:
+        # Skip users with invalid data
+        if not user.get('username') or user.get('role') not in ['super_admin', 'admin', 'cashier', 'inventory']:
+            continue
+            
+        # Clean up user data for response
+        user_data = {
+            'id': user.get('id', str(user.get('_id', ''))),
+            'username': user.get('username'),
+            'full_name': user.get('full_name'),
+            'role': user.get('role'),
+            'phone': user.get('phone'),
+            'permissions': user.get('permissions', []),
+            'created_at': user.get('created_at'),
+            'is_active': user.get('is_active', True)
+        }
+        valid_users.append(UserResponse(**user_data))
+    
+    return valid_users
 
 @api_router.post("/users", response_model=UserResponse)
 async def create_user_with_permissions(
