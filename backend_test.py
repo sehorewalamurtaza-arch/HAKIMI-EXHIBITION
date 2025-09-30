@@ -325,39 +325,68 @@ class RoleBasedAccessTester:
         
         return results
     
-    def test_exhibition_creation_api(self):
-        """Test POST /exhibitions - test exhibition creation with JSON payload"""
-        print(f"\n🏛️ Testing Exhibition Creation API...")
+    def test_jwt_token_validation(self):
+        """Test JWT token validation and user info"""
+        print("\n🎫 PHASE 5: Testing JWT Token System...")
         
-        # Sample exhibition data as specified in review request
-        exhibition_data = {
-            "name": "Dubai Perfume Festival 2024",
-            "location": "Dubai World Trade Centre",
-            "start_date": "2024-12-01T09:00:00",
-            "end_date": "2024-12-05T18:00:00",
-            "description": "Premium perfume and attar exhibition"
+        results = {
+            "token_contains_user_info": False,
+            "token_validation": False,
+            "role_based_middleware": False
         }
         
-        try:
-            response = requests.post(f"{self.base_url}/exhibitions", json=exhibition_data, headers=self.headers)
-            print(f"Exhibition Creation API Status: {response.status_code}")
+        # Test Super Admin token contains proper user info
+        if self.super_admin_token:
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.super_admin_token}"
+            }
             
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Exhibition Creation API working")
-                print(f"   Exhibition ID: {data['id']}")
-                print(f"   Name: {data['name']}")
-                print(f"   Location: {data['location']}")
-                print(f"   Status: {data['status']}")
+            try:
+                response = requests.get(f"{self.base_url}/auth/me", headers=headers)
+                print(f"GET /auth/me Status: {response.status_code}")
                 
-                return True, data
-            else:
-                print(f"❌ Exhibition Creation API failed: {response.text}")
-                return False, None
+                if response.status_code == 200:
+                    user_info = response.json()
+                    print(f"✅ JWT token validation working")
+                    print(f"   Username: {user_info['username']}")
+                    print(f"   Role: {user_info['role']}")
+                    print(f"   Permissions: {user_info.get('permissions', [])}")
+                    
+                    if user_info['role'] == 'super_admin' and user_info['username'] == SUPER_ADMIN_USERNAME:
+                        results["token_contains_user_info"] = True
+                        results["token_validation"] = True
+                        print("✅ JWT contains proper user info and permissions")
+                    
+                else:
+                    print(f"❌ JWT token validation failed: {response.text}")
+                    
+            except Exception as e:
+                print(f"❌ JWT token validation error: {str(e)}")
+        
+        # Test role-based middleware with different users
+        print("\n🛡️ Testing Role-Based Authentication Middleware...")
+        for username, user_data in self.test_user_tokens.items():
+            token, user = self.authenticate_test_user(username, user_data['password'])
+            if token:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {token}"
+                }
                 
-        except Exception as e:
-            print(f"❌ Exhibition Creation API error: {str(e)}")
-            return False, None
+                try:
+                    response = requests.get(f"{self.base_url}/auth/me", headers=headers)
+                    if response.status_code == 200:
+                        user_info = response.json()
+                        print(f"✅ {username} token validated - Role: {user_info['role']}")
+                        results["role_based_middleware"] = True
+                    else:
+                        print(f"❌ {username} token validation failed")
+                        
+                except Exception as e:
+                    print(f"❌ Error validating {username} token: {str(e)}")
+        
+        return results
     
     def test_sales_by_exhibition_api(self, exhibition_id="1"):
         """Test GET /sales/exhibition/{exhibition_id} - get sales for specific exhibition"""
