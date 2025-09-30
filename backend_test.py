@@ -491,58 +491,56 @@ class RoleBasedAccessTester:
             print(f"❌ Error testing self-deletion prevention: {str(e)}")
             return False
 
-    def test_enhanced_sales_api(self, exhibition_id="1"):
-        """Test POST /sales/enhanced - test multi-payment sales functionality"""
-        print(f"\n💰 Testing Enhanced Sales API...")
+    def run_comprehensive_rbac_tests(self):
+        """Run comprehensive role-based access control tests"""
+        print("🚀 STARTING ROLE-BASED ACCESS CONTROL SYSTEM TESTING")
+        print("=" * 70)
         
-        # Sample sale data with multi-payment as specified in review request
-        sale_data = {
-            "exhibition_id": exhibition_id,
-            "customer_name": "Ahmed Hassan",
-            "customer_phone": "+971501234567",
-            "items": [
-                {
-                    "product_id": "1",
-                    "quantity": 2,
-                    "price": 150.0
-                }
-            ],
-            "payments": [
-                {
-                    "type": "cash",
-                    "amount": 200.0
-                },
-                {
-                    "type": "card",
-                    "amount": 115.75
-                }
-            ]
+        results = {
+            "super_admin_login": False,
+            "old_credentials_disabled": False,
+            "user_management_apis": {},
+            "test_users_created": False,
+            "permission_enforcement": {},
+            "jwt_validation": {},
+            "error_responses": {},
+            "self_deletion_prevention": False
         }
         
-        try:
-            response = requests.post(f"{self.base_url}/sales/enhanced", json=sale_data, headers=self.headers)
-            print(f"Enhanced Sales API Status: {response.status_code}")
-            
-            if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Enhanced Sales API working")
-                print(f"   Sale Number: {data['sale_number']}")
-                print(f"   Total Amount: ${data['total_amount']}")
-                print(f"   Change Given: ${data['change_given']}")
-                print(f"   Sale ID: {data['id']}")
-                
-                # Verify multi-payment support
-                total_payment = sum(p['amount'] for p in sale_data['payments'])
-                print(f"   Multi-payment total: ${total_payment}")
-                
-                return True, data
-            else:
-                print(f"❌ Enhanced Sales API failed: {response.text}")
-                return False, None
-                
-        except Exception as e:
-            print(f"❌ Enhanced Sales API error: {str(e)}")
-            return False, None
+        # PHASE 1: Super Admin Login
+        success, user_info = self.authenticate_super_admin()
+        results["super_admin_login"] = success
+        
+        if not success:
+            print("\n❌ Cannot proceed without Super Admin authentication")
+            return results
+        
+        # Test old credentials are disabled
+        results["old_credentials_disabled"] = self.test_old_admin_credentials()
+        
+        # PHASE 2: User Management APIs
+        results["user_management_apis"] = self.test_user_management_apis()
+        
+        # PHASE 3: Create test users with limited permissions
+        created_users = self.create_test_users_with_limited_permissions()
+        results["test_users_created"] = len(created_users) > 0
+        
+        # PHASE 4: Test permission enforcement
+        results["permission_enforcement"] = self.test_permission_enforcement()
+        
+        # PHASE 5: JWT token validation
+        results["jwt_validation"] = self.test_jwt_token_validation()
+        
+        # Test error responses
+        results["error_responses"] = self.test_error_responses()
+        
+        # Test self-deletion prevention
+        results["self_deletion_prevention"] = self.test_self_deletion_prevention()
+        
+        # Clean up test users
+        self.cleanup_test_users()
+        
+        return results
     
     def run_all_tests(self):
         """Run all API tests"""
