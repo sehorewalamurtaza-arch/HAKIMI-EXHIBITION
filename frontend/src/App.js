@@ -94,6 +94,7 @@ function App() {
                     <Route path="/expenses" element={<ExpenseManager />} />
                     <Route path="/leads" element={<Leads />} />
                     <Route path="/reports" element={<Reports />} />
+                    <Route path="/day-end-close" element={<DayEndClose />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </main>
