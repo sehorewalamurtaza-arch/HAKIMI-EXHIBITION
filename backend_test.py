@@ -14,38 +14,65 @@ BASE_URL = "https://luxury-platform.preview.emergentagent.com/api"
 SUPER_ADMIN_USERNAME = "Murtaza Taher"
 SUPER_ADMIN_PASSWORD = "Hakimi@786"
 
-class POSAPITester:
+class RoleBasedAccessTester:
     def __init__(self):
         self.base_url = BASE_URL
-        self.token = None
+        self.super_admin_token = None
+        self.test_user_tokens = {}
         self.headers = {"Content-Type": "application/json"}
+        self.created_test_users = []
         
-    def authenticate(self):
-        """Authenticate and get JWT token"""
-        print("🔐 Testing Authentication...")
+    def authenticate_super_admin(self):
+        """Authenticate Super Admin and get JWT token"""
+        print("🔐 PHASE 1: Testing Super Admin Authentication...")
         
         login_data = {
-            "username": TEST_USERNAME,
-            "password": TEST_PASSWORD
+            "username": SUPER_ADMIN_USERNAME,
+            "password": SUPER_ADMIN_PASSWORD
         }
         
         try:
             response = requests.post(f"{self.base_url}/auth/login", json=login_data)
-            print(f"Login Response Status: {response.status_code}")
+            print(f"Super Admin Login Response Status: {response.status_code}")
             
             if response.status_code == 200:
                 data = response.json()
-                self.token = data["access_token"]
-                self.headers["Authorization"] = f"Bearer {self.token}"
-                print(f"✅ Authentication successful for user: {data['user']['username']}")
+                self.super_admin_token = data["access_token"]
+                print(f"✅ Super Admin authentication successful!")
+                print(f"   Username: {data['user']['username']}")
                 print(f"   Role: {data['user']['role']}")
+                print(f"   Permissions: {data['user']['permissions']}")
+                return True, data['user']
+            else:
+                print(f"❌ Super Admin authentication failed: {response.text}")
+                return False, None
+                
+        except Exception as e:
+            print(f"❌ Super Admin authentication error: {str(e)}")
+            return False, None
+    
+    def test_old_admin_credentials(self):
+        """Test that old admin/admin123 credentials no longer work"""
+        print("\n🔒 Testing Old Admin Credentials (Should Fail)...")
+        
+        login_data = {
+            "username": "admin",
+            "password": "admin123"
+        }
+        
+        try:
+            response = requests.post(f"{self.base_url}/auth/login", json=login_data)
+            print(f"Old Admin Login Response Status: {response.status_code}")
+            
+            if response.status_code == 401:
+                print("✅ Old admin credentials properly disabled")
                 return True
             else:
-                print(f"❌ Authentication failed: {response.text}")
+                print(f"❌ Old admin credentials still working: {response.text}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Authentication error: {str(e)}")
+            print(f"❌ Error testing old credentials: {str(e)}")
             return False
     
     def test_exhibitions_api(self):
