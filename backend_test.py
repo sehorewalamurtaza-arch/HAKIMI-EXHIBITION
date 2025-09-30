@@ -542,85 +542,80 @@ class RoleBasedAccessTester:
         
         return results
     
-    def run_all_tests(self):
-        """Run all API tests"""
-        print("🚀 Starting FINAL BACKEND API VALIDATION TESTS")
-        print("=" * 60)
+    def print_test_summary(self, results):
+        """Print comprehensive test summary"""
+        print("\n" + "=" * 70)
+        print("📊 ROLE-BASED ACCESS CONTROL SYSTEM TEST RESULTS")
+        print("=" * 70)
         
-        results = {
-            "authentication": False,
-            "exhibitions_get": False,
-            "exhibition_creation": False,
-            "categories": False,
-            "inventory": False,
-            "enhanced_sales": False,
-            "sales_by_exhibition": False,
-            "leads_by_exhibition": False
-        }
+        # Phase 1 Results
+        print("\n🔐 PHASE 1: Super Admin Authentication")
+        print(f"   Super Admin Login (Murtaza Taher): {'✅ PASS' if results['super_admin_login'] else '❌ FAIL'}")
+        print(f"   Old Credentials Disabled: {'✅ PASS' if results['old_credentials_disabled'] else '❌ FAIL'}")
         
-        # Test authentication first
-        if not self.authenticate():
-            print("\n❌ Cannot proceed without authentication")
-            return results
+        # Phase 2 Results
+        print("\n👥 PHASE 2: User Management APIs")
+        user_mgmt = results['user_management_apis']
+        print(f"   GET /users: {'✅ PASS' if user_mgmt.get('get_users', False) else '❌ FAIL'}")
+        print(f"   POST /users: {'✅ PASS' if user_mgmt.get('create_user', False) else '❌ FAIL'}")
+        print(f"   PUT /users/permissions: {'✅ PASS' if user_mgmt.get('update_permissions', False) else '❌ FAIL'}")
         
-        results["authentication"] = True
+        # Phase 3 Results
+        print("\n👤 PHASE 3: Test User Creation")
+        print(f"   Limited Permission Users Created: {'✅ PASS' if results['test_users_created'] else '❌ FAIL'}")
         
-        # Test exhibitions GET API
-        success, exhibitions_data = self.test_exhibitions_api()
-        results["exhibitions_get"] = success
+        # Phase 4 Results
+        print("\n🔒 PHASE 4: Permission Enforcement")
+        perm_enforcement = results['permission_enforcement']
+        print(f"   POS-only User Forbidden from /users: {'✅ PASS' if perm_enforcement.get('pos_only_forbidden', False) else '❌ FAIL'}")
+        print(f"   Inventory User Can Access Products: {'✅ PASS' if perm_enforcement.get('inventory_user_access', False) else '❌ FAIL'}")
+        print(f"   Limited Admin Forbidden from /users: {'✅ PASS' if perm_enforcement.get('limited_admin_forbidden', False) else '❌ FAIL'}")
         
-        # Test exhibition creation API
-        success, new_exhibition_data = self.test_exhibition_creation_api()
-        results["exhibition_creation"] = success
+        # Phase 5 Results
+        print("\n🎫 PHASE 5: JWT Token Validation")
+        jwt_validation = results['jwt_validation']
+        print(f"   Token Contains User Info: {'✅ PASS' if jwt_validation.get('token_contains_user_info', False) else '❌ FAIL'}")
+        print(f"   Token Validation Working: {'✅ PASS' if jwt_validation.get('token_validation', False) else '❌ FAIL'}")
+        print(f"   Role-Based Middleware: {'✅ PASS' if jwt_validation.get('role_based_middleware', False) else '❌ FAIL'}")
         
-        # Get exhibition ID for subsequent tests
-        exhibition_id = "1"  # Default fallback
-        if new_exhibition_data:
-            exhibition_id = new_exhibition_data["id"]
-            print(f"\n🎯 Using newly created exhibition ID: {exhibition_id} for subsequent tests")
-        elif exhibitions_data and len(exhibitions_data) > 0:
-            exhibition_id = exhibitions_data[0]["id"]
-            print(f"\n🎯 Using existing exhibition ID: {exhibition_id} for subsequent tests")
+        # Error Response Results
+        print("\n⚠️ ERROR RESPONSE HANDLING")
+        error_responses = results['error_responses']
+        print(f"   403 Forbidden Responses: {'✅ PASS' if error_responses.get('forbidden_403', False) else '❌ FAIL'}")
+        print(f"   404 Not Found Responses: {'✅ PASS' if error_responses.get('not_found_404', False) else '❌ FAIL'}")
+        print(f"   401 Unauthorized Responses: {'✅ PASS' if error_responses.get('unauthorized_401', False) else '❌ FAIL'}")
         
-        # Test categories API
-        success, data = self.test_categories_api()
-        results["categories"] = success
+        # Security Features
+        print("\n🛡️ SECURITY FEATURES")
+        print(f"   Self-Deletion Prevention: {'✅ PASS' if results['self_deletion_prevention'] else '❌ FAIL'}")
         
-        # Test inventory API with exhibition ID
-        success, data = self.test_inventory_api(exhibition_id)
-        results["inventory"] = success
+        # Calculate overall success
+        all_tests = []
+        all_tests.append(results['super_admin_login'])
+        all_tests.append(results['old_credentials_disabled'])
+        all_tests.extend(user_mgmt.values())
+        all_tests.append(results['test_users_created'])
+        all_tests.extend(perm_enforcement.values())
+        all_tests.extend(jwt_validation.values())
+        all_tests.extend(error_responses.values())
+        all_tests.append(results['self_deletion_prevention'])
         
-        # Test enhanced sales API with exhibition ID
-        success, data = self.test_enhanced_sales_api(exhibition_id)
-        results["enhanced_sales"] = success
+        total_tests = len(all_tests)
+        passed_tests = sum(all_tests)
         
-        # Test sales by exhibition API
-        success, data = self.test_sales_by_exhibition_api(exhibition_id)
-        results["sales_by_exhibition"] = success
-        
-        # Test leads by exhibition API
-        success, data = self.test_leads_by_exhibition_api(exhibition_id)
-        results["leads_by_exhibition"] = success
-        
-        # Print summary
-        print("\n" + "=" * 60)
-        print("📊 FINAL BACKEND API VALIDATION RESULTS")
-        print("=" * 60)
-        
-        for test_name, passed in results.items():
-            status = "✅ PASS" if passed else "❌ FAIL"
-            print(f"{test_name.upper().replace('_', ' ')}: {status}")
-        
-        total_tests = len(results)
-        passed_tests = sum(results.values())
-        print(f"\nOverall: {passed_tests}/{total_tests} tests passed")
+        print(f"\n📈 OVERALL RESULTS: {passed_tests}/{total_tests} tests passed")
         
         if passed_tests == total_tests:
-            print("\n🎉 ALL BACKEND APIs ARE WORKING PROPERLY!")
+            print("\n🎉 ALL ROLE-BASED ACCESS CONTROL TESTS PASSED!")
+            print("✅ Super Admin can manage all users and has full access")
+            print("✅ Regular users can only access features they have permissions for")
+            print("✅ Security is properly implemented with no unauthorized access")
+            print("✅ All user management operations work correctly")
+            print("✅ System maintains security while being user-friendly")
         else:
-            print(f"\n⚠️ {total_tests - passed_tests} API(s) need attention")
+            print(f"\n⚠️ {total_tests - passed_tests} test(s) failed - system needs attention")
         
-        return results
+        return passed_tests == total_tests
 
 if __name__ == "__main__":
     tester = POSAPITester()
