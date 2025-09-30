@@ -14,6 +14,7 @@ import Leads from './components/Leads';
 import Reports from './components/Reports';
 import ExpenseManager from './components/ExpenseManager';
 import DayEndClose from './components/DayEndClose';
+import ExhibitionClosure from './components/ExhibitionClosure';
 import UserManagement from './components/UserManagement';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
