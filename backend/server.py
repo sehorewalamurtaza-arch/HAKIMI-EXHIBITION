@@ -957,6 +957,108 @@ async def get_dashboard_stats(current_user: User = Depends(get_admin_user)):
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.utcnow()}
 
+# User Management Routes (Super Admin only)
+@api_router.get("/users", response_model=List[UserResponse])
+async def get_all_users(current_user: User = Depends(get_admin_user)):
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only Super Admin can access user management")
+    
+    users = await db.users.find().to_list(100)
+    return [UserResponse(**user) for user in users]
+
+@api_router.post("/users", response_model=UserResponse)
+async def create_user_with_permissions(
+    user_data: UserCreate,
+    current_user: User = Depends(get_admin_user)
+):
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only Super Admin can create users")
+    
+    # Check if user already exists
+    existing_user = await db.users.find_one({"username": user_data.username})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Hash password
+    password_hash = hashlib.sha256(user_data.password.encode()).hexdigest()
+    
+    # Create user
+    user = User(
+        username=user_data.username,
+        full_name=user_data.full_name,
+        role=user_data.role,
+        phone=user_data.phone,
+        permissions=user_data.permissions,
+        password_hash=password_hash
+    )
+    
+    await db.users.insert_one(user.model_dump())
+    return UserResponse(**user.model_dump())
+
+@api_router.put("/users/{user_id}/permissions")
+async def update_user_permissions(
+    user_id: str,
+    permissions: List[Permission],
+    current_user: User = Depends(get_admin_user)
+):
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only Super Admin can update permissions")
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"permissions": permissions, "updated_at": datetime.utcnow()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"success": True, "message": "Permissions updated successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only Super Admin can delete users")
+    
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"success": True, "message": "User deleted successfully"}
+
+# Startup event to create the main super admin user
+@app.on_event("startup")
+async def create_super_admin_user():
+    # Check if Murtaza Taher (Super Admin) exists
+    existing_admin = await db.users.find_one({"username": "Murtaza Taher"})
+    
+    if not existing_admin:
+        # Create the main super admin user
+        password_hash = hashlib.sha256("Hakimi@786".encode()).hexdigest()
+        
+        super_admin = User(
+            username="Murtaza Taher",
+            full_name="Murtaza Taher - Super Administrator",
+            role=UserRole.SUPER_ADMIN,
+            phone="+971-ADMIN-MAIN",
+            permissions=[permission.value for permission in Permission],  # All permissions
+            password_hash=password_hash
+        )
+        
+        await db.users.insert_one(super_admin.model_dump())
+        logger.info("Super Admin user 'Murtaza Taher' created successfully")
+    else:
+        logger.info("Super Admin user 'Murtaza Taher' already exists")
+    
+    # Remove old admin user if exists
+    await db.users.delete_many({"username": {"$in": ["admin", "cashier", "inventory"]}})
+    logger.info("Cleaned up old default users")
+
 # Include router
 app.include_router(api_router)
 
