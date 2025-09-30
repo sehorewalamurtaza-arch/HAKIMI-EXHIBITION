@@ -229,34 +229,101 @@ class RoleBasedAccessTester:
         
         return created_users
     
-    def test_inventory_api(self, exhibition_id="1"):
-        """Test GET /inventory/exhibition/{id} - should return sample inventory items"""
-        print(f"\n📦 Testing Inventory API for exhibition {exhibition_id}...")
+    def authenticate_test_user(self, username, password):
+        """Authenticate a test user and return token"""
+        login_data = {
+            "username": username,
+            "password": password
+        }
         
         try:
-            response = requests.get(f"{self.base_url}/inventory/exhibition/{exhibition_id}", headers=self.headers)
-            print(f"Inventory API Status: {response.status_code}")
-            
+            response = requests.post(f"{self.base_url}/auth/login", json=login_data)
             if response.status_code == 200:
                 data = response.json()
-                print(f"✅ Inventory API working - Found {len(data)} inventory items")
-                
-                available_items = 0
-                for item in data:
-                    remaining = item['remaining_quantity']
-                    print(f"   - {item['product_name']}: ${item['product_price']} (Remaining: {remaining})")
-                    if remaining > 0:
-                        available_items += 1
-                
-                print(f"✅ Found {available_items} items with remaining_quantity > 0")
-                return True, data
+                return data["access_token"], data["user"]
             else:
-                print(f"❌ Inventory API failed: {response.text}")
-                return False, None
-                
+                return None, None
         except Exception as e:
-            print(f"❌ Inventory API error: {str(e)}")
-            return False, None
+            print(f"❌ Error authenticating {username}: {str(e)}")
+            return None, None
+    
+    def test_permission_enforcement(self):
+        """Test that users can only access endpoints matching their permissions"""
+        print("\n🔒 PHASE 4: Testing Permission Enforcement...")
+        
+        results = {
+            "pos_only_forbidden": False,
+            "inventory_user_access": False,
+            "limited_admin_forbidden": False
+        }
+        
+        # Test POS-only user trying to access /users (should get 403)
+        print("\n🚫 Testing POS-only user accessing /users (should be forbidden)...")
+        if "pos_only_user" in self.test_user_tokens:
+            token, user = self.authenticate_test_user("pos_only_user", "pos123")
+            if token:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {token}"
+                }
+                
+                try:
+                    response = requests.get(f"{self.base_url}/users", headers=headers)
+                    print(f"POS user accessing /users: Status {response.status_code}")
+                    
+                    if response.status_code == 403:
+                        print("✅ POS-only user properly forbidden from /users")
+                        results["pos_only_forbidden"] = True
+                    else:
+                        print(f"❌ POS-only user should be forbidden: {response.text}")
+                except Exception as e:
+                    print(f"❌ Error testing POS user permissions: {str(e)}")
+        
+        # Test inventory user accessing products (should work)
+        print("\n✅ Testing inventory user accessing /products (should work)...")
+        if "inventory_user" in self.test_user_tokens:
+            token, user = self.authenticate_test_user("inventory_user", "inv123")
+            if token:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {token}"
+                }
+                
+                try:
+                    response = requests.get(f"{self.base_url}/products", headers=headers)
+                    print(f"Inventory user accessing /products: Status {response.status_code}")
+                    
+                    if response.status_code == 200:
+                        print("✅ Inventory user can access /products")
+                        results["inventory_user_access"] = True
+                    else:
+                        print(f"❌ Inventory user should access products: {response.text}")
+                except Exception as e:
+                    print(f"❌ Error testing inventory user permissions: {str(e)}")
+        
+        # Test limited admin trying to access /users (should get 403)
+        print("\n🚫 Testing limited admin accessing /users (should be forbidden)...")
+        if "limited_admin" in self.test_user_tokens:
+            token, user = self.authenticate_test_user("limited_admin", "admin123")
+            if token:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {token}"
+                }
+                
+                try:
+                    response = requests.get(f"{self.base_url}/users", headers=headers)
+                    print(f"Limited admin accessing /users: Status {response.status_code}")
+                    
+                    if response.status_code == 403:
+                        print("✅ Limited admin properly forbidden from /users")
+                        results["limited_admin_forbidden"] = True
+                    else:
+                        print(f"❌ Limited admin should be forbidden: {response.text}")
+                except Exception as e:
+                    print(f"❌ Error testing limited admin permissions: {str(e)}")
+        
+        return results
     
     def test_exhibition_creation_api(self):
         """Test POST /exhibitions - test exhibition creation with JSON payload"""
