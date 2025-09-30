@@ -377,27 +377,115 @@ const OriginalPOS = () => {
   }
 
   return (
-    <div className="pos-grid fade-in" data-testid="pos-page">
-      {/* Products Section */}
-      <div className="pos-products">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Point of Sale</h1>
-            <p className="text-gray-600 mt-1">Select products to add to cart</p>
-          </div>
-          <select
-            value={selectedExhibition?.id || ''}
-            onChange={(e) => setSelectedExhibition(exhibitions.find(ex => ex.id === e.target.value))}
-            className="form-select max-w-xs"
-            data-testid="exhibition-select"
-          >
-            {exhibitions.map(exhibition => (
-              <option key={exhibition.id} value={exhibition.id}>
-                {exhibition.name}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-6 fade-in" data-testid="pos-page">
+      {/* POS Header with Actions */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Point of Sale</h1>
+          <p className="text-gray-600 mt-1">Exhibition-based sales management</p>
         </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowOrderHistory(!showOrderHistory)}
+            className="btn-secondary"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Order History ({recentOrders.length})
+          </button>
+          <a href="/day-end-close" className="btn-primary bg-red-600 hover:bg-red-700">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Day End Close
+          </a>
+        </div>
+      </div>
+
+      {/* Order History Panel */}
+      {showOrderHistory && (
+        <div className="card p-6 bg-blue-50 border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-800">Recent Orders (Today)</h2>
+            <button
+              onClick={() => setShowOrderHistory(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            {recentOrders.map((order) => (
+              <div key={order.id} className="bg-white p-4 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-sm text-gray-800">{order.sale_number}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(order.created_at).toLocaleTimeString('en-AE', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">{order.customer_name}</p>
+                <p className="text-lg font-bold text-green-600 mb-2">{formatCurrency(order.total_amount)}</p>
+                
+                <div className="flex items-center justify-between">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {order.status}
+                  </span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => editOrder(order)}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteOrder(order.id)}
+                      className="text-red-600 hover:text-red-800 text-xs"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {recentOrders.length === 0 && (
+              <div className="col-span-3 text-center text-gray-500 py-8">
+                <p>No orders today</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="pos-grid">
+        {/* Products Section */}
+        <div className="pos-products">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Products</h2>
+              <p className="text-gray-600 mt-1">Select products to add to cart</p>
+            </div>
+            <select
+              value={selectedExhibition?.id || ''}
+              onChange={(e) => setSelectedExhibition(exhibitions.find(ex => ex.id === e.target.value))}
+              className="form-select max-w-xs"
+              data-testid="exhibition-select"
+            >
+              {exhibitions.map(exhibition => (
+                <option key={exhibition.id} value={exhibition.id}>
+                  {exhibition.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
         {/* Search Bar */}
         <div className="mb-6">
