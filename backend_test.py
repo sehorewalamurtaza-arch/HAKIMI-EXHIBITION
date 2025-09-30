@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing for Badshah-Hakimi POS System
-Testing the updated backend APIs for POS system validation
+Testing Role-Based Access Control System and User Management
 """
 
 import requests
@@ -11,8 +11,8 @@ import sys
 
 # Configuration
 BASE_URL = "https://luxury-platform.preview.emergentagent.com/api"
-TEST_USERNAME = "admin"
-TEST_PASSWORD = "admin123"
+SUPER_ADMIN_USERNAME = "Murtaza Taher"
+SUPER_ADMIN_PASSWORD = "Hakimi@786"
 
 class POSAPITester:
     def __init__(self):
