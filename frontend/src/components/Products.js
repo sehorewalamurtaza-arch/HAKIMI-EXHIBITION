@@ -203,6 +203,172 @@ const Products = () => {
     return category ? category.name : 'Unknown';
   };
 
+  const exportInventoryToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(18);
+    doc.text('BADSHAH - HAKIMI EXHIBITION', 20, 20);
+    doc.setFontSize(16);
+    doc.text('INVENTORY REPORT', 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-AE')}`, 20, 40);
+    
+    // Inventory Summary
+    const totalValue = products.reduce((sum, product) => sum + (product.price * product.stock_quantity), 0);
+    const totalItems = products.reduce((sum, product) => sum + product.stock_quantity, 0);
+    const lowStock = products.filter(product => product.stock_quantity <= 10).length;
+    
+    doc.setFontSize(14);
+    doc.text('INVENTORY SUMMARY', 20, 55);
+    doc.setFontSize(11);
+    doc.text(`Total Products: ${products.length}`, 20, 65);
+    doc.text(`Total Items in Stock: ${totalItems}`, 20, 72);
+    doc.text(`Total Inventory Value: AED ${totalValue.toFixed(2)}`, 20, 79);
+    doc.text(`Low Stock Items: ${lowStock}`, 20, 86);
+    
+    // Product Details Table
+    const headers = ['Product Name', 'Category', 'SKU', 'Stock', 'Price', 'Value'];
+    const data = products.map(product => [
+      product.name,
+      getCategoryName(product.category_id),
+      product.sku || 'N/A',
+      product.stock_quantity.toString(),
+      `AED ${product.price.toFixed(2)}`,
+      `AED ${(product.price * product.stock_quantity).toFixed(2)}`
+    ]);
+    
+    doc.autoTable({
+      startY: 95,
+      head: [headers],
+      body: data,
+      theme: 'striped',
+      headStyles: { fillColor: [245, 158, 11] },
+      styles: { fontSize: 8 }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text(`Page ${i} of ${pageCount}`, 190, 285);
+      doc.text('Confidential - Inventory Report', 20, 285);
+    }
+    
+    doc.save('Inventory_Report.pdf');
+  };
+
+  const exportInventoryToExcel = () => {
+    const workbook = XLSX.utils.book_new();
+    
+    // Summary Sheet
+    const totalValue = products.reduce((sum, product) => sum + (product.price * product.stock_quantity), 0);
+    const totalItems = products.reduce((sum, product) => sum + product.stock_quantity, 0);
+    const lowStock = products.filter(product => product.stock_quantity <= 10).length;
+    
+    const summaryData = [
+      ['BADSHAH - HAKIMI EXHIBITION'],
+      ['INVENTORY SUMMARY REPORT'],
+      [''],
+      ['Report Generated:', new Date().toLocaleDateString('en-AE')],
+      [''],
+      ['SUMMARY METRICS'],
+      ['Total Products', products.length],
+      ['Total Items in Stock', totalItems],
+      ['Total Inventory Value (AED)', totalValue],
+      ['Low Stock Items (≤10)', lowStock],
+      [''],
+      ['STOCK STATUS BREAKDOWN'],
+      ['High Stock (>50)', products.filter(p => p.stock_quantity > 50).length],
+      ['Medium Stock (11-50)', products.filter(p => p.stock_quantity > 10 && p.stock_quantity <= 50).length],
+      ['Low Stock (≤10)', lowStock],
+      ['Out of Stock (0)', products.filter(p => p.stock_quantity === 0).length]
+    ];
+    
+    const summaryWS = XLSX.utils.aoa_to_sheet(summaryData);
+    summaryWS['!cols'] = [{ wch: 25 }, { wch: 15 }];
+    
+    // Detailed Inventory Sheet
+    const inventoryHeaders = ['Product Name', 'Category', 'SKU', 'Description', 'Stock Quantity', 'Unit Price (AED)', 'Cost (AED)', 'Total Value (AED)', 'Stock Status'];
+    const inventoryData = products.map(product => [
+      product.name,
+      getCategoryName(product.category_id),
+      product.sku || 'N/A',
+      product.description || 'N/A',
+      product.stock_quantity,
+      product.price,
+      product.cost || product.price * 0.6, // Estimated cost if not available
+      product.price * product.stock_quantity,
+      product.stock_quantity === 0 ? 'OUT OF STOCK' :
+      product.stock_quantity <= 10 ? 'LOW STOCK' :
+      product.stock_quantity <= 50 ? 'MEDIUM STOCK' : 'HIGH STOCK'
+    ]);
+    
+    const inventoryWS = XLSX.utils.aoa_to_sheet([inventoryHeaders, ...inventoryData]);
+    inventoryWS['!cols'] = [
+      { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 40 },
+      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+    ];
+    
+    // Low Stock Alert Sheet
+    const lowStockProducts = products.filter(product => product.stock_quantity <= 10);
+    if (lowStockProducts.length > 0) {
+      const alertHeaders = ['Product Name', 'Category', 'Current Stock', 'Unit Price', 'Status', 'Reorder Urgency'];
+      const alertData = lowStockProducts.map(product => [
+        product.name,
+        getCategoryName(product.category_id),
+        product.stock_quantity,
+        product.price,
+        product.stock_quantity === 0 ? 'OUT OF STOCK' : 'LOW STOCK',
+        product.stock_quantity === 0 ? 'URGENT' :
+        product.stock_quantity <= 5 ? 'HIGH' : 'MEDIUM'
+      ]);
+      
+      const alertWS = XLSX.utils.aoa_to_sheet([alertHeaders, ...alertData]);
+      alertWS['!cols'] = [
+        { wch: 30 }, { wch: 20 }, { wch: 15 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }
+      ];
+      
+      XLSX.utils.book_append_sheet(workbook, alertWS, 'Low Stock Alert');
+    }
+    
+    // Category Analysis Sheet
+    const categoryAnalysis = {};
+    products.forEach(product => {
+      const categoryName = getCategoryName(product.category_id);
+      if (!categoryAnalysis[categoryName]) {
+        categoryAnalysis[categoryName] = {
+          productCount: 0,
+          totalStock: 0,
+          totalValue: 0
+        };
+      }
+      categoryAnalysis[categoryName].productCount++;
+      categoryAnalysis[categoryName].totalStock += product.stock_quantity;
+      categoryAnalysis[categoryName].totalValue += product.price * product.stock_quantity;
+    });
+    
+    const categoryHeaders = ['Category', 'Product Count', 'Total Stock', 'Total Value (AED)'];
+    const categoryData = Object.entries(categoryAnalysis).map(([category, data]) => [
+      category,
+      data.productCount,
+      data.totalStock,
+      data.totalValue
+    ]);
+    
+    const categoryWS = XLSX.utils.aoa_to_sheet([categoryHeaders, ...categoryData]);
+    categoryWS['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+    
+    // Add sheets to workbook
+    XLSX.utils.book_append_sheet(workbook, summaryWS, 'Summary');
+    XLSX.utils.book_append_sheet(workbook, inventoryWS, 'Detailed Inventory');
+    XLSX.utils.book_append_sheet(workbook, categoryWS, 'Category Analysis');
+    
+    XLSX.writeFile(workbook, 'Inventory_Report.xlsx');
+  };
+
   const formatCurrency = (amount) => {
     const currency = localStorage.getItem('currency') || 'AED';
     const currencyMap = {
