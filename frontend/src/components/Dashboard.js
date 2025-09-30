@@ -167,35 +167,6 @@ const Dashboard = () => {
     }
   };
 
-      // Sort by date and take recent 5
-      allSales.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setRecentSales(allSales.slice(0, 5));
-
-      // Count total leads
-      let totalLeads = 0;
-      for (const exhibition of exhibitions) {
-        try {
-          const leadsResponse = await axios.get(`${API}/leads/exhibition/${exhibition.id}`);
-          totalLeads += leadsResponse.data.length;
-        } catch (error) {
-          console.error(`Error fetching leads for exhibition ${exhibition.id}:`, error);
-        }
-      }
-
-      setStats({
-        totalExhibitions: exhibitions.length,
-        totalProducts: products.length,
-        totalSales: allSales.reduce((sum, sale) => sum + sale.total_amount, 0),
-        totalLeads
-      });
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'AED');
 
   const formatCurrency = (amount) => {
