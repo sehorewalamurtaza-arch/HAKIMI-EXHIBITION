@@ -440,29 +440,56 @@ class RoleBasedAccessTester:
         
         return results
     
-    def test_leads_by_exhibition_api(self, exhibition_id="1"):
-        """Test GET /leads/exhibition/{exhibition_id} - get leads for specific exhibition"""
-        print(f"\n👥 Testing Leads by Exhibition API for exhibition {exhibition_id}...")
+    def cleanup_test_users(self):
+        """Clean up created test users"""
+        print("\n🧹 Cleaning up test users...")
         
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.super_admin_token}"
+        }
+        
+        for user_id in self.created_test_users:
+            try:
+                response = requests.delete(f"{self.base_url}/users/{user_id}", headers=headers)
+                if response.status_code == 200:
+                    print(f"✅ Deleted test user {user_id}")
+                else:
+                    print(f"⚠️ Could not delete test user {user_id}: {response.text}")
+            except Exception as e:
+                print(f"❌ Error deleting test user {user_id}: {str(e)}")
+    
+    def test_self_deletion_prevention(self):
+        """Test that users cannot delete themselves"""
+        print("\n🚫 Testing Self-Deletion Prevention...")
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.super_admin_token}"
+        }
+        
+        # Get current user info
         try:
-            response = requests.get(f"{self.base_url}/leads/exhibition/{exhibition_id}", headers=self.headers)
-            print(f"Leads by Exhibition API Status: {response.status_code}")
-            
+            response = requests.get(f"{self.base_url}/auth/me", headers=headers)
             if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Leads by Exhibition API working - Found {len(data)} leads")
+                user_info = response.json()
+                user_id = user_info['id']
                 
-                for lead in data:
-                    print(f"   - {lead.get('name', 'Unknown')}: {lead.get('phone', 'No phone')} ({lead.get('status', 'No status')})")
-                
-                return True, data
+                # Try to delete self
+                response = requests.delete(f"{self.base_url}/users/{user_id}", headers=headers)
+                if response.status_code == 400:
+                    print("✅ Self-deletion properly prevented")
+                    return True
+                else:
+                    print(f"❌ Self-deletion should be prevented: {response.text}")
+                    return False
             else:
-                print(f"❌ Leads by Exhibition API failed: {response.text}")
-                return False, None
+                print("❌ Could not get current user info")
+                return False
                 
         except Exception as e:
-            print(f"❌ Leads by Exhibition API error: {str(e)}")
-            return False, None
+            print(f"❌ Error testing self-deletion prevention: {str(e)}")
+            return False
 
     def test_enhanced_sales_api(self, exhibition_id="1"):
         """Test POST /sales/enhanced - test multi-payment sales functionality"""
