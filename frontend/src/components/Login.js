@@ -2,66 +2,44 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../App';
 
 const Login = () => {
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { login, API } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-
+    
     try {
-      const response = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        login(data.access_token, data.user);
-      } else {
-        setError(data.detail || 'Login failed');
-      }
+      await login(formData.username, formData.password);
     } catch (error) {
-      setError('Network error. Please try again.');
+      console.error('Login failed:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <img
-              src="https://customer-assets.emergentagent.com/job_exhib-sales-system/artifacts/wrbx7jzs_Asset%202.png"
-              alt="Hakimi Logo"
-              className="w-16 h-16 object-contain"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50/30 to-gray-100/20 flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Badshah Hakimi</h1>
-          <p className="text-gray-600">Exhibition Sales Platform</p>
+          <h1 className="text-3xl font-semibold text-gray-900 mb-3">
+            Badshah Hakimi
+          </h1>
+          <p className="text-gray-600 font-normal">
+            Exhibition Sales Platform
+          </p>
         </div>
 
-        {/* Form */}
-        <div className="card p-8">
+        {/* Login Form */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-sm border border-gray-200/40">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-            
             <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 Username
               </label>
               <input
@@ -70,14 +48,15 @@ const Login = () => {
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="form-input"
                 data-testid="username-input"
                 placeholder="Username"
+                disabled={loading}
               />
             </div>
-            
+
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -86,21 +65,36 @@ const Login = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="form-input"
                 data-testid="password-input"
                 placeholder="Password"
+                disabled={loading}
               />
             </div>
-            
+
             <button
               type="submit"
-              className="w-full btn-primary py-3 text-lg font-semibold"
+              className="w-full btn-primary py-4 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
               data-testid="login-submit-btn"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="loading-spinner"></div>
+                  <span>Signing in...</span>
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-gray-500">
+            &copy; 2024 Badshah Hakimi Exhibition Sales
+          </p>
         </div>
       </div>
     </div>
